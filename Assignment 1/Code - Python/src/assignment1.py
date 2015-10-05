@@ -2,6 +2,7 @@ import csv
 import os
 import sys
 import numpy as np
+from numpy import linalg as LA
 import math
 
 trainingData = "../Training/train_p1_15.csv"
@@ -13,6 +14,7 @@ def generateVariables(filename):
     y = matrixTemp[:,-1]
     np.reshape(y, (matrixTemp.shape[0], 1))
     y = np.matrix(y)
+    y = y.transpose()
     #Turns y into column vector, more as a sanity check
     #y = y[:, np.newaxis]
     #Takes all but last column for x
@@ -27,17 +29,20 @@ def generateInitialW(x):
 
 def l2_loss(N, y, w, x, l):
 	gradientError = 0
+	print (y[0] - w.transpose()*x[0])
+	print np.dot(w.transpose(),x[0])
 	for i in xrange(0,N):
-
-		gradientError += math.pow((y[i] - w.transpose()*x[i]),2) + l*math.pow(abs(w),2)
+		gradientError += np.pow((y[i] - np.dot(w,x[i]),2) + l*LA.norm(w)
+	
+	#return gradientError
 
 def l2gradientDescentStep(y, w, x, l):
     return (y - (x * w.T).T) * x + l * w
 
 def gradientDescent(N, y, w, x, l, a, epsilon):
-    loss = l2_loss(N, y, w, x, l)
-    while(loss > epsilon):
-        gradient = l2gradientDescentStep(N, y, w, x, l)
+    gradient = 1
+    while(abs(gradient) > epsilon):
+        gradient = l2_loss(N, y, w, x, l)
         w = w - a*gradient
 
     return w
@@ -58,9 +63,14 @@ def main():
     w = generateInitialW(x)
     N = x.shape[0]
     l = 1
+    a = .5
     epsilon = .0001
+    #print w
+    #print x
+    #print y
 
-    test = l2gradientDescentStep(y, w, x, l)
+    #test = l2gradientDescentStep(y, w, x, l)
+    testProblem = gradientDescent(N, y, w, x, l, a, epsilon)
     #problem1()
     #problem2()
     #problem3()
