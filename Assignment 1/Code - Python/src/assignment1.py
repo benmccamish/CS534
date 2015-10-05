@@ -35,16 +35,15 @@ def generateInitialW(x):
 
 
 def l2_loss(y, w, x, l):
-    y_error = y - (x * w.T).T
-    y_error = y_error * y_error.T
-    l2_error = l * w * w.T
+    y_error = y - (x * w.T)
 
+    y_error = y_error.T * y_error
+    l2_error = l * w * w.T
     return y_error + l2_error
 
 def l2gradientDescentStep(y, w, x, l):
-    my_guess = x * w.T
 
-    stuff =  ((x * w.T).T - y) * x + l * w
+    stuff =  ((x * w.T) - y).T * x + l * w
 
     return stuff
 
@@ -53,8 +52,10 @@ def l2gradientDescentStep(y, w, x, l):
 def gradientDescent(y, w, x, l, a, epsilon):
     loss = l2_loss(y, w, x, l)
     print loss
-    for i in range(200):
+    for i in range(3):
         gradient = l2gradientDescentStep(y, w, x, l)
+        print "grad"
+        print gradient.shape
         w = w - a * gradient
         loss = l2_loss(y, w, x, l)
         print loss
@@ -80,7 +81,7 @@ def main():
     epsilon = .0001
 
     test = l2gradientDescentStep(y, w, x, l)
-    test = gradientDescent(y, w, x, l, 0.001, 1.0)
+    test = gradientDescent(y, w, x, l, 0.001, 50.0)
     #problem1()
     #problem2()
     #problem3()
