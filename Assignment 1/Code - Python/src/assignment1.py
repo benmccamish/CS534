@@ -2,6 +2,7 @@ import csv
 import os
 import sys
 import numpy as np
+from numpy import linalg as LA
 import math
 
 trainingData = "../Training/train_p1_15.csv"
@@ -13,6 +14,7 @@ def generateVariables(filename):
     y = matrixTemp[:,-1]
     np.reshape(y, (matrixTemp.shape[0], 1))
     y = np.matrix(y)
+    y = y.transpose()
     #Turns y into column vector, more as a sanity check
     #y = y[:, np.newaxis]
     #Takes all but last column for x
@@ -31,6 +33,7 @@ def generateInitialW(x):
     return np.matrix(np.ones((1, my_size[1])))
 
 
+
 def l2_loss(y, w, x, l):
     y_error = y - (x * w.T).T
     y_error = y_error * y_error.T
@@ -44,6 +47,7 @@ def l2gradientDescentStep(y, w, x, l):
     stuff =  ((x * w.T).T - y) * x + l * w
 
     return stuff
+
 
 
 def gradientDescent(y, w, x, l, a, epsilon):
