@@ -16,29 +16,44 @@ def generateVariables(filename):
     #Turns y into column vector, more as a sanity check
     #y = y[:, np.newaxis]
     #Takes all but last column for x
-    x = np.matrix(np.delete(matrixTemp, -1, 1))
+    x = np.delete(matrixTemp, -1, 1)
+    x = x - x.min(axis=0)
+
+    x = x / x.max(axis=0)
+    x[:,0] = 1
+
+    x = np.matrix(x)
 
     return x, y
 
 def generateInitialW(x):
     my_size = x.shape
-    return np.matrix(np.zeros(my_size[1]))
+    return np.matrix(np.ones((1, my_size[1])))
 
 
-def l2_loss(N, y, w, x, l):
-	gradientError = 0
-	for i in xrange(0,N):
+def l2_loss(y, w, x, l):
+    y_error = y - (x * w.T).T
+    y_error = y_error * y_error.T
+    l2_error = l * w * w.T
 
-		gradientError += math.pow((y[i] - w.transpose()*x[i]),2) + l*math.pow(abs(w),2)
+    return y_error + l2_error
 
 def l2gradientDescentStep(y, w, x, l):
-    return (y - (x * w.T).T) * x + l * w
+    my_guess = x * w.T
 
-def gradientDescent(N, y, w, x, l, a, epsilon):
-    loss = l2_loss(N, y, w, x, l)
-    while(loss > epsilon):
-        gradient = l2gradientDescentStep(N, y, w, x, l)
-        w = w - a*gradient
+    stuff =  ((x * w.T).T - y) * x + l * w
+
+    return stuff
+
+
+def gradientDescent(y, w, x, l, a, epsilon):
+    loss = l2_loss(y, w, x, l)
+    print loss
+    for i in range(200):
+        gradient = l2gradientDescentStep(y, w, x, l)
+        w = w - a * gradient
+        loss = l2_loss(y, w, x, l)
+        print loss
 
     return w
 
@@ -61,6 +76,7 @@ def main():
     epsilon = .0001
 
     test = l2gradientDescentStep(y, w, x, l)
+    test = gradientDescent(y, w, x, l, 0.001, 1.0)
     #problem1()
     #problem2()
     #problem3()
