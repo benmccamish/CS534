@@ -54,8 +54,6 @@ def gradientDescent(y, w, x, l, a, epsilon):
     print loss
     for i in range(3):
         gradient = l2gradientDescentStep(y, w, x, l)
-        print "grad"
-        print gradient.shape
         w = w - a * gradient
         loss = l2_loss(y, w, x, l)
         print loss
