@@ -32,6 +32,17 @@ def generateInitialW(x):
     my_size = x.shape
     return np.matrix(np.ones((1, my_size[1])))
 
+def gradientDescentSSE(y,w,x,l,N):
+	sumError = 0
+	for i in range(N):
+		test = ((w.T*x[i]) - y[i]).T * ((w.T*x[i]) - y[i])
+		sumError += np.multiply(test,x[i])
+
+	return sumError 
+
+
+def testl2_gradientDescent(y,w,x,l):
+	pass
 
 
 def l2_loss(y, w, x, l):
@@ -42,21 +53,20 @@ def l2_loss(y, w, x, l):
     return y_error + l2_error
 
 def l2gradientDescentStep(y, w, x, l):
-
     stuff =  ((x * w.T) - y).T * x + l * w
-
     return stuff
 
-
-
-def gradientDescent(y, w, x, l, a, epsilon):
+def gradientDescent(y, w, x, l, a, epsilon, N):
     loss = l2_loss(y, w, x, l)
     print loss
-    for i in range(3):
+    for i in range(N):
         gradient = l2gradientDescentStep(y, w, x, l)
+        gradient = gradientDescentSSE(y, w, x, l, N)
         w = w - a * gradient
         loss = l2_loss(y, w, x, l)
+        print LA.norm(gradient)
         print loss
+        #print gradient
 
     return w
 
@@ -79,7 +89,7 @@ def main():
     epsilon = .0001
 
     test = l2gradientDescentStep(y, w, x, l)
-    test = gradientDescent(y, w, x, l, 0.001, 50.0)
+    test = gradientDescent(y, w, x, l, .001, 0.0001, N)
     #problem1()
     #problem2()
     #problem3()
