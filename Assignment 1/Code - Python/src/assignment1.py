@@ -35,19 +35,24 @@ def generateInitialW(x):
     return np.matrix(np.ones((1, my_size[1])))
 
 def gradientDescentTesting(y,w,x,l,N):
-	lossList = list()
-	gradientList = list()
-	for i in range(N):
-		loss = l2_loss(y[i], w, x[i], l)
-		gradient = l2gradientDescentStep(y[i], w, x[i], l)
-		lossList.append(loss.item(0))
-		gradientList.append(LA.norm(gradient))
-		#w = w - a * gradient
-		print LA.norm(gradient)
-		print loss.item(0)
+    lossList = list()
+    gradientList = list()
+    for i in range(N):
+        loss = l2_loss(y[i], w, x[i], l)
+        gradient = l2gradientDescentStep(y[i], w, x[i], l)
+        lossList.append(loss.item(0))
+        gradientList.append(LA.norm(gradient))
+        #w = w - a * gradient
+        print LA.norm(gradient)
+        print loss.item(0)
 
-	return lossList, gradientList, w
+    SSE = lossSSE(y, w, x, l)
+    return lossList, gradientList, w, SSE.item(0)
 
+def lossSSE(y, w, x, l):
+    y_error = y - (x * w.T)
+    y_error = y_error.T * y_error
+    return y_error
 
 def l2_loss(y, w, x, l):
     y_error = y - (x * w.T)
@@ -65,80 +70,166 @@ def gradientDescent(y, w, x, l, a, epsilon, N):
     print loss
     lossList = list()
     gradientList = list()
-    for i in range(N):
+    stopping = 50
+    #for i in range(3000):
+    while stopping > 1:
         gradient = l2gradientDescentStep(y, w, x, l)
         lossList.append(loss.item(0))
         gradientList.append(LA.norm(gradient))
         w = w - a * gradient
         loss = l2_loss(y, w, x, l)
         print LA.norm(gradient)
+        stopping = LA.norm(gradient)
         print loss.item(0)
 
-    return lossList, gradientList, w
+    SSE = lossSSE(y, w, x, l)
+    return lossList, gradientList, w, SSE.item(0)
 
 def problem1TrainandTest(y,w,x,l,a,epsilon,N,fileName):
-	#plt.clf()
-	
-	trainingLoss, trainingGradient, w = gradientDescent(y, w, x, l, a, epsilon, N)
-	x, y = generateVariables(testingData)
-	testingLoss, testingGradient, w = gradientDescentTesting(y, w, x, l, N)
-	
-	plt.figure(0)
-	plt.plot(trainingLoss, label='a='+str(a))
-	
-	plt.figure(1)
-	plt.plot(trainingGradient, label='a='+str(a))
+    #plt.clf()
 
-	plt.figure(2)
-	plt.plot(testingGradient, label='a='+str(a))
-	
-	plt.figure(3)
-	plt.plot(testingLoss, label='a='+str(a))
+    trainingLoss, trainingGradient, w, SSE = gradientDescent(y, w, x, l, a, epsilon, N)
+    x, y = generateVariables(testingData)
+    testingLoss, testingGradient, w, SSE = gradientDescentTesting(y, w, x, 0, N)
+
+    plt.figure(0)
+    plt.plot(trainingLoss, label='a='+str(a))
+
+    plt.figure(1)
+    plt.plot(trainingGradient, label='a='+str(a))
+
+    plt.figure(2)
+    plt.plot(testingGradient, label='a='+str(a))
+
+    plt.figure(3)
+    plt.plot(testingLoss, label='a='+str(a))
 
 
 def problem1(y, w, x, l, a, epsilon, N):
-	problem1TrainandTest(y,w,x,l,0.00001,epsilon,N, 'a00001')
-	problem1TrainandTest(y,w,x,l,0.0001,epsilon,N, 'a0001')
-	problem1TrainandTest(y,w,x,l,0.001,epsilon,N, 'a001')
-	problem1TrainandTest(y,w,x,l,0.01,epsilon,N, 'a01')
-	problem1TrainandTest(y,w,x,l,0.1,epsilon,N, 'a1')
+    problem1TrainandTest(y,w,x,l,0.00001,epsilon,N, 'a00001')
+    problem1TrainandTest(y,w,x,l,0.0001,epsilon,N, 'a0001')
+    problem1TrainandTest(y,w,x,l,0.001,epsilon,N, 'a001')
+    problem1TrainandTest(y,w,x,l,0.01,epsilon,N, 'a01')
+    problem1TrainandTest(y,w,x,l,0.1,epsilon,N, 'a1')
 
-	pp = PdfPages('trainingLoss.pdf')
-	plt.figure(0)
-	plt.ylim((0,60000))
-	plt.xlim((-5,100))
-	plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-	plt.savefig(pp, format='pdf',bbox_inches = 'tight')
-	pp.close()
-	#plt.clf()
+    pp = PdfPages('trainingLoss.pdf')
+    plt.figure(0)
+    #plt.ylim((0,60000))
+    #plt.xlim((-5,100))
+    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    plt.savefig(pp, format='pdf',bbox_inches = 'tight')
+    pp.close()
+    #plt.clf()
 
-	pp = PdfPages('trainingGradient.pdf')
-	plt.figure(1)
-	plt.ylim((0,10000))
-	plt.xlim((-5,100))
-	plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-	plt.savefig(pp, format='pdf',bbox_inches = 'tight')
-	pp.close()
+    pp = PdfPages('trainingGradient.pdf')
+    plt.figure(1)
+    #plt.ylim((0,10000))
+    #plt.xlim((-5,100))
+    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    plt.savefig(pp, format='pdf',bbox_inches = 'tight')
+    pp.close()
 
-	pp = PdfPages('testingGradient.pdf')
-	plt.figure(2)
-	plt.ylim((0,1000))
-	plt.xlim((-5,100))
-	plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-	plt.savefig(pp, format='pdf',bbox_inches = 'tight')
-	pp.close()
+    pp = PdfPages('testingGradient.pdf')
+    plt.figure(2)
+    #plt.ylim((0,1000))
+    #plt.xlim((-5,100))
+    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    plt.savefig(pp, format='pdf',bbox_inches = 'tight')
+    pp.close()
 
-	pp = PdfPages('testingLoss.pdf')
-	plt.figure(3)
-	plt.ylim((0,5000))
-	plt.xlim((-5,100))
-	plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-	plt.savefig(pp, format='pdf',bbox_inches = 'tight')
-	pp.close()
+    pp = PdfPages('testingLoss.pdf')
+    plt.figure(3)
+    plt.ylim((0,5000))
+    plt.xlim((-5,100))
+    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    plt.savefig(pp, format='pdf',bbox_inches = 'tight')
+    pp.close()
 
+def problem2TrainandTest(y,w,x,l,a,epsilon,N,testingSSElist, trainingSSElist):
+    #plt.clf()
+    
+    trainingLoss, trainingGradient, w, trainingSSE = gradientDescent(y, w, x, l, a, epsilon, N)
+    x, y = generateVariables(testingData)
+    testingLoss, testingGradient, w, testingSSE = gradientDescentTesting(y, w, x, l, N)
+    
+    testingSSElist.append(testingSSE)
+    trainingSSElist.append(trainingSSE)
 
-def problem2():
-	pass
+    plt.figure(0)
+    plt.plot(trainingLoss, label='l='+str(l))
+    
+    plt.figure(1)
+    plt.plot(trainingGradient, label='l='+str(l))
+
+    plt.figure(2)
+    plt.plot(testingGradient, label='l='+str(l))
+    
+    plt.figure(3)
+    plt.plot(testingLoss, label='l='+str(l))
+
+    return trainingSSElist,testingSSElist
+
+def problem2(y, w, x, l, a, epsilon, N):
+    trainingSSElist = list()
+    testingSSElist = list()
+
+    trainingSSElist, testingSSElist = problem2TrainandTest(y,w,x,0,0.001,epsilon,N, testingSSElist, trainingSSElist)
+    trainingSSElist, testingSSElist = problem2TrainandTest(y,w,x,0.000001,0.001,epsilon,N, testingSSElist, trainingSSElist)
+    trainingSSElist, testingSSElist = problem2TrainandTest(y,w,x,0.00001,0.001,epsilon,N, testingSSElist, trainingSSElist)
+    trainingSSElist, testingSSElist = problem2TrainandTest(y,w,x,0.0001,0.001,epsilon,N, testingSSElist, trainingSSElist)
+    trainingSSElist, testingSSElist = problem2TrainandTest(y,w,x,0.001,0.001,epsilon,N, testingSSElist, trainingSSElist)
+    trainingSSElist, testingSSElist = problem2TrainandTest(y,w,x,0.01,0.001,epsilon,N, testingSSElist, trainingSSElist)
+    trainingSSElist, testingSSElist = problem2TrainandTest(y,w,x,0.1,0.001,epsilon,N, testingSSElist, trainingSSElist)
+    trainingSSElist, testingSSElist = problem2TrainandTest(y,w,x,1,0.001,epsilon,N, testingSSElist, trainingSSElist)
+    trainingSSElist, testingSSElist = problem2TrainandTest(y,w,x,10,0.001,epsilon,N, testingSSElist, trainingSSElist)
+    trainingSSElist, testingSSElist = problem2TrainandTest(y,w,x,100,0.001,epsilon,N, testingSSElist, trainingSSElist)
+
+    pp = PdfPages('trainingLoss.pdf')
+    plt.figure(0)
+    plt.ylim((0,60000))
+    plt.xlim((-5,100))
+    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    plt.savefig(pp, format='pdf',bbox_inches = 'tight')
+    pp.close()
+    #plt.clf()
+
+    pp = PdfPages('trainingGradient.pdf')
+    plt.figure(1)
+    plt.ylim((0,10000))
+    plt.xlim((-5,100))
+    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    plt.savefig(pp, format='pdf',bbox_inches = 'tight')
+    pp.close()
+
+    pp = PdfPages('testingGradient.pdf')
+    plt.figure(2)
+    plt.ylim((0,1000))
+    plt.xlim((-5,100))
+    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    plt.savefig(pp, format='pdf',bbox_inches = 'tight')
+    pp.close()
+
+    pp = PdfPages('testingLoss.pdf')
+    plt.figure(3)
+    plt.ylim((0,5000))
+    plt.xlim((-5,100))
+    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    plt.savefig(pp, format='pdf',bbox_inches = 'tight')
+    pp.close()
+
+    pp = PdfPages('SSE.pdf')
+    plt.figure(4)
+    print testingSSElist
+    lambList = [0,0.000001,0.00001,0.0001,0.001,0.01,0.1,1,10,100]
+    plt.plot(lambList, testingSSElist, label='testing')
+    plt.plot(lambList, trainingSSElist, label='training')
+    plt.xscale('log')
+    #plt.ylim((0,1000))
+    #plt.xlim((-1,1))
+    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    plt.savefig(pp, format='pdf',bbox_inches = 'tight')
+    pp.close()
+	
 
 def problem3():
 	pass
@@ -158,6 +249,7 @@ def main():
 
     #gradientDescentSSE(y, w, x, l, N)
     problem1(y, w, x, l, a, epsilon, N)
+    #problem2(y, w, x, l, a, epsilon, N)
     #problem1TrainandTest(y,w,x,l,0.001,epsilon,N, 'a001')
     #plt.show()
     #problem2()
