@@ -96,7 +96,7 @@ def problem1TrainandTest(y,w,x,l,a,epsilon,N,fileName):
 	plt.plot(testingLoss, label='a='+str(a))
 
 
-def testProblem1(y, w, x, l, a, epsilon, N):
+def problem1(y, w, x, l, a, epsilon, N):
 	problem1TrainandTest(y,w,x,l,0.00001,epsilon,N, 'a00001')
 	problem1TrainandTest(y,w,x,l,0.0001,epsilon,N, 'a0001')
 	problem1TrainandTest(y,w,x,l,0.001,epsilon,N, 'a001')
@@ -136,46 +136,6 @@ def testProblem1(y, w, x, l, a, epsilon, N):
 	plt.savefig(pp, format='pdf',bbox_inches = 'tight')
 	pp.close()
 
-def problem1(y, w, x, l, a, epsilon, N):
-	pp = PdfPages('multipage.pdf')
-	loss00001, gradient00001, w00001 = gradientDescent(y, w, x, l, 0.00001, epsilon, N)
-	loss0001, gradient0001, w0001 = gradientDescent(y, w, x, l, 0.0001, epsilon, N)
-	loss001, gradient001 = gradientDescent(y, w, x, l, 0.001, epsilon, N)
-	loss01, gradient01 = gradientDescent(y, w, x, l, 0.01, epsilon, N)
-	loss1, gradient1 = gradientDescent(y, w, x, l, 0.1, epsilon, N)
-	plt.ylabel('Loss Over Time')
-	plt.plot(loss00001, label='a=00001')
-	plt.plot(loss0001, label='a=0001')
-	plt.plot(loss001, label='a=001')
-	plt.plot(loss01, label='a=01')
-	plt.plot(loss1, label='a=1')
-	plt.ylim((0,100000))
-	plt.xlim((-5,100))
-	#plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,ncol=2, mode="expand", borderaxespad=0.)
-	plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-	#handles, labels = plt.get_legend_handles_labels()
-	#plt.legend(handles, labels)
-	#plt.legend(handles=[a00001,a0001,a001,a01,a1])
-	#plt.show()
-
-	plt.savefig(pp, format='pdf',bbox_inches = 'tight')
-	#pp.close()
-	plt.clf()
-
-	plt.ylabel('Gradient Over Time')
-	plt.plot(gradient00001, label='a=00001')
-	plt.plot(gradient0001, label='a=0001')
-	plt.plot(gradient001, label='a=001')
-	plt.plot(gradient01, label='a=01')
-	plt.plot(gradient1, label='a=1')
-	plt.ylim((0,10000))
-	plt.xlim((-5,100))
-	#plt.show()
-	plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-	plt.savefig(pp, format='pdf',bbox_inches = 'tight')
-	plt.clf()
-	pp.close()
-
 
 def problem2():
 	pass
@@ -197,8 +157,7 @@ def main():
     #test = gradientDescent(y, w, x, l, 0.001, 0.0001, N)
 
     #gradientDescentSSE(y, w, x, l, N)
-    #problem1(y, w, x, l, 1, epsilon, N)
-    testProblem1(y, w, x, l, a, epsilon, N)
+    problem1(y, w, x, l, a, epsilon, N)
     #problem1TrainandTest(y,w,x,l,0.001,epsilon,N, 'a001')
     #plt.show()
     #problem2()
