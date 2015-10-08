@@ -61,12 +61,10 @@ def gradientDescent(y, w, x, l, a, epsilon, N):
     print loss
     for i in range(N):
         gradient = l2gradientDescentStep(y, w, x, l)
-        gradient = gradientDescentSSE(y, w, x, l, N)
         w = w - a * gradient
         loss = l2_loss(y, w, x, l)
         print LA.norm(gradient)
         print loss
-        #print gradient
 
     return w
 
@@ -85,11 +83,11 @@ def main():
     x, y = generateVariables(trainingData)
     w = generateInitialW(x)
     N = x.shape[0]
-    l = 1
+    l = 100
     epsilon = .0001
 
     test = l2gradientDescentStep(y, w, x, l)
-    test = gradientDescent(y, w, x, l, .001, 0.0001, N)
+    test = gradientDescent(y, w, x, l, 0.001, 0.0001, N)
     #problem1()
     #problem2()
     #problem3()
