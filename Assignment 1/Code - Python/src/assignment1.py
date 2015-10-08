@@ -33,10 +33,14 @@ def generateInitialW(x):
     return np.matrix(np.ones((1, my_size[1])))
 
 def gradientDescentSSE(y,w,x,l,N):
-	sumError = 0
+	sumError = np.zeros(x[0].shape)
 	for i in range(N):
-		test = ((w.T*x[i]) - y[i]).T * ((w.T*x[i]) - y[i])
-		sumError += np.multiply(test,x[i])
+		test = ((w*x[i].T) - y[i])
+        print (test*x[i]).shape
+        print x[i].shape
+        print w.shape
+        print (w *x[i].T).shape
+        sumError += test * x[i]
 
 	return sumError 
 
@@ -83,11 +87,13 @@ def main():
     x, y = generateVariables(trainingData)
     w = generateInitialW(x)
     N = x.shape[0]
-    l = 100
+    l = 0.001
     epsilon = .0001
 
     test = l2gradientDescentStep(y, w, x, l)
     test = gradientDescent(y, w, x, l, 0.001, 0.0001, N)
+
+    gradientDescentSSE(y, w, x, l, N)
     #problem1()
     #problem2()
     #problem3()
