@@ -85,6 +85,22 @@ def gradientDescent(y, w, x, l, a, epsilon, N):
     SSE = lossSSE(y, w, x, l)
     return lossList, gradientList, w, SSE.item(0)
 
+def prob_3_train(y, x, l, a, test_y, test_x):
+	w = generateInitialW(x)
+	loss = l2_loss(y, w, x, l)
+
+
+	stopping = 50
+	#for i in range(3000):
+	while stopping > 1:
+		gradient = l2gradientDescentStep(y, w, x, l)
+		w = w - a * gradient
+		loss = l2_loss(y, w, x, 0)
+		stopping = LA.norm(gradient)
+
+	SSE = l2_loss(test_y, w, test_x, 0)
+	return SSE[0,0], loss[0,0]
+
 def problem1TrainandTest(y,w,x,l,a,epsilon,N,fileName):
     #plt.clf()
 
@@ -229,29 +245,67 @@ def problem2(y, w, x, l, a, epsilon, N):
     plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
     plt.savefig(pp, format='pdf',bbox_inches = 'tight')
     pp.close()
-	
+
 
 def problem3(y, x, a):
-    train_x = []
-    train_y = []
+	train_x = []
+	train_y = []
 
-    test_x = []
-    test_y = []
+	test_x = []
+	test_y = []
 
-    test_x = np.split(x, 10)
-    test_y = np.split(y, 10)
-    print test_x[9].shape
-    for i in range(10):
-        temp_list = []
-        for j in range(10):
-            if (i != j):
-                temp_list.append(test_x[j])
+	test_x = np.split(x, 10)
+	test_y = np.split(y, 10)
+	print test_x[9].shape
+	for i in range(10):
+		temp_list = []
+		temp_y = []
+		for j in range(10):
+			if (i != j):
+				temp_list.append(test_x[j])
+				temp_y.append(test_y[j])
 
-        all_train_arrs = tuple(temp_list)
-        train_x.append(np.vstack(all_train_arrs))
+		all_train_arrs = tuple(temp_list)
+		all_y_arrs = tuple(temp_y)
+		train_x.append(np.vstack(all_train_arrs))
+		train_y.append(np.vstack(all_y_arrs))
+	
+	lambda_vals = []
+	lambda_vals = [0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 2.0, 5.0, 10.0]
+	min_test_loss = -1
+	best_lambda = -1
+	training_losses = []
+	testing_losses = []
+	for l in lambda_vals:
+		test_loss = 0
+		trained_loss = 0
+		for i in range(len(train_x)):
+			sse, t_sse = prob_3_train(train_y[i], train_x[i], l, 0.001, test_y[i], test_x[i])
+			
+			test_loss += sse
+			trained_loss += t_sse 
 
-    lambda_vals = [0.0001, 0.001, 0.01, 0.1, 1.0, 2.0, 5.0, 10.0]
-    min_test_loss = -1
+		if (test_loss < min_test_loss or min_test_loss == -1):
+			min_test_loss = test_loss
+			best_lambda = l
+
+		training_losses.append(trained_loss)
+		testing_losses.append(test_loss)
+		print l
+		print test_loss
+		print trained_loss
+	
+	pp = PdfPages('loo_SSE.pdf')
+	plt.figure(4)
+	plt.plot(lambda_vals, testing_losses, label='testing')
+	plt.plot(lambda_vals, training_losses, label='training')
+	plt.xscale('log')
+	#plt.ylim((0,1000))
+	#plt.xlim((-1,1))
+	plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+	plt.savefig("loo_SSE.jpg")
+	plt.savefig(pp, format='pdf',bbox_inches = 'tight')
+	pp.close()
 
 
 
