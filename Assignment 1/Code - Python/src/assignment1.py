@@ -302,7 +302,7 @@ def problem3(y, x, a):
 	plt.xscale('log')
 	#plt.ylim((0,1000))
 	#plt.xlim((-1,1))
-	plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+	plt.legend(loc=0)
 	plt.savefig("loo_SSE.jpg")
 	plt.savefig(pp, format='pdf',bbox_inches = 'tight')
 	pp.close()
