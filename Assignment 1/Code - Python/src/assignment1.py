@@ -231,8 +231,29 @@ def problem2(y, w, x, l, a, epsilon, N):
     pp.close()
 	
 
-def problem3():
-	pass
+def problem3(y, x, a):
+    train_x = []
+    train_y = []
+
+    test_x = []
+    test_y = []
+
+    test_x = np.split(x, 10)
+    test_y = np.split(y, 10)
+    print test_x[9].shape
+    for i in range(10):
+        temp_list = []
+        for j in range(10):
+            if (i != j):
+                temp_list.append(test_x[j])
+
+        all_train_arrs = tuple(temp_list)
+        train_x.append(np.vstack(all_train_arrs))
+
+    lambda_vals = [0.0001, 0.001, 0.01, 0.1, 1.0, 2.0, 5.0, 10.0]
+    min_test_loss = -1
+
+
 
 def main():
     #starting variables can be changed later to be command line if we want
@@ -248,12 +269,12 @@ def main():
     #test = gradientDescent(y, w, x, l, 0.001, 0.0001, N)
 
     #gradientDescentSSE(y, w, x, l, N)
-    problem1(y, w, x, l, a, epsilon, N)
+    #problem1(y, w, x, l, a, epsilon, N)
     #problem2(y, w, x, l, a, epsilon, N)
     #problem1TrainandTest(y,w,x,l,0.001,epsilon,N, 'a001')
     #plt.show()
     #problem2()
-    #problem3()
+    problem3(y, x, a)
 
 # Giving Python the main it deserves
 if __name__ == "__main__": 
