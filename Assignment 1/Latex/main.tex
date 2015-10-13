@@ -106,6 +106,11 @@ As expected, we see a concave curve in the Figure \ref{lambda}, indicating where
     
     
 \section*{Problem III}
+\begin{enumerate}
+\item 3a. I would use 0.1 as my lambda because it has the lowest loss on the testing set.
 
+\item 3b. It is much smaller than the training SSE. The Training sum squared error is the sum over 900 examples essentially. The cross-validated SSE is only over 100 examples. So, that is partially why it is much smaller.
 
+\item 3c. It looks extremely similar to the training SSE. It could be that the testing subsets in the cross validation are quite similar to the data we are training on. This would cause the testing SSE to resemble the training SSE because the data would be pretty much the same.
+\end{enumerate}
 \end{document}
