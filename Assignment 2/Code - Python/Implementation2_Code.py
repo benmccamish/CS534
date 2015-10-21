@@ -45,18 +45,20 @@ def Class_Word_Matrix(Group_Labels, Vocab, Data_Labels, Data_Data):
 	count = 0
 	current_word = 0
 	word_count = 0
-	Total_Docs_Per_Class = 0
+	Total_Docs_Per_Class = [0]*20
 	
 	#loop through entire data label array#
-	for x in range(0, len(Data_Labels)):
-		current_class = Data_Labels[x] - 1 #Capture class label --1 through 20-- represented by --0 through 19--
-		Total_Docs_Per_Class = Total_Docs_Per_Class + 1 #As we iterate through train.label, iterate how many documents exist in the current class
-		Doc_Num_Each_Class[int(current_class)] = Total_Docs_Per_Class #Update the 1-D array keeping track of #documents for each class
+	for x in xrange(0, len(Data_Labels)):
+		current_class = int(Data_Labels[x]) - 1 #Capture class label --1 through 20-- represented by --0 through 19--
+		Total_Docs_Per_Class[current_class] += 1 #As we iterate through train.label, iterate how many documents exist in the current class
+		#Doc_Num_Each_Class[current_class] = Total_Docs_Per_Class #Update the 1-D array keeping track of #documents for each class
 		
-		if x + 1 < len(Data_Labels) and Data_Labels[x + 1] != current_class + 1: #Ensure we don't look at a non-existent array index AND reset our document counter per class when the next index sees a new class coming up
-			Total_Docs_Per_Class = 0
-		
+		#if x <= len(Data_Labels) and Data_Labels[x + 1] != current_class + 1: #Ensure we don't look at a non-existent array index AND reset our document counter per class when the next index sees a new class coming up
+		#	Total_Docs_Per_Class = 0
+
 		#For each particular document, loop through every word it contains#
+		for word in xrange(0,len(Data_Data)):
+			pass
 		while Data_Data[count][0] == x + 1: 
 			current_word = Data_Data[count][1] - 1 #Keep track of the current word we're on, note the -1 is rearranging the word to match correct index.... Word 1 in vocabulary matches to index 0 and so on.
 			word_count = Data_Data[count][2] #How many times does certain word for current document occur
@@ -92,6 +94,7 @@ def problem3():
 def main():
 	newsGroup, vocab, dataLabels, actualData = readData(newsgrouplabels, vocabulary, data_labels, data_data)
 	Class_WC, Document_Word_Occur, Doc_Num_Each_Class = Class_Word_Matrix(Group_Labels, Vocab, Data_Labels, Data_Data)
+
 
 	#problem1()
 	#problem2()
