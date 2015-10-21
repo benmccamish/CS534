@@ -57,8 +57,6 @@ def Class_Word_Matrix(Group_Labels, Vocab, Data_Labels, Data_Data):
 		#	Total_Docs_Per_Class = 0
 
 		#For each particular document, loop through every word it contains#
-		for word in xrange(0,len(Data_Data)):
-			pass
 		while Data_Data[count][0] == x + 1: 
 			current_word = Data_Data[count][1] - 1 #Keep track of the current word we're on, note the -1 is rearranging the word to match correct index.... Word 1 in vocabulary matches to index 0 and so on.
 			word_count = Data_Data[count][2] #How many times does certain word for current document occur
@@ -66,7 +64,6 @@ def Class_Word_Matrix(Group_Labels, Vocab, Data_Labels, Data_Data):
 			
 			if word_count > 0:
 				Document_Word_Occur[current_class][current_word] = Document_Word_Occur[current_class][current_word] + 1 #Other array that keeps track of number of documents that contain a certain word in a class
-				
 			
 			if count < len(Data_Data) - 1: #Keep incrementing our count value to keep going through our data file
 				count = count + 1
