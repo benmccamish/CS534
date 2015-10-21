@@ -101,8 +101,3 @@ def main():
 # Giving Python the main it deserves
 if __name__ == "__main__": 
 	main()	
-	
-	
-Group_Labels, Vocab, Data_Labels, Data_Data = Function1(newsgrouplabels, vocabulary, data_labels, data_data)
-Class_WC, Document_Word_Occur, Doc_Num_Each_Class = Class_Word_Matrix(Group_Labels, Vocab, Data_Labels, Data_Data)
-#Bernouli_Laplace(Document_Word_Occur)
