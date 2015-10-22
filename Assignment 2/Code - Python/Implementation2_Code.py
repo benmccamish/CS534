@@ -1,3 +1,4 @@
+from __future__ import division
 import csv
 import matplotlib as mpl
 import numpy as np
@@ -7,6 +8,7 @@ from sys import argv
 from copy import copy, deepcopy
 from numpy.linalg import inv
 import random
+import math
 
 # Not sure what script is for...
 #script = 'data/'
@@ -39,7 +41,7 @@ def readData(newsgrouplabels, vocabulary, data_labels, data_data):
 ###############################################################################################################################################################
 #######Create a 2-D array that shows # of word occurrences per class, also 2-D array that counts number of documents containing a certain word#################
 def Class_Word_Matrix(Group_Labels, Vocab, Data_Labels, Data_Data):
-	Class_WC = np.zeros((len(newsgrouplabels) + 1, len(Vocab))) #Number of words in vocab by number of classes
+	Class_WC = np.zeros((len(Group_Labels), len(Vocab))) #Number of words in vocab by number of classes
 	Document_Word_Occur = np.zeros((len(Group_Labels), len(Vocab))) #Number of words in vocab by number of classes
 	Doc_Num_Each_Class = [0]*20 #Count how many documents per class exist in train.label
 	count = 0
@@ -80,6 +82,38 @@ def Class_Word_Matrix(Group_Labels, Vocab, Data_Labels, Data_Data):
 	#print Document_Word_Occur[19][12101] verify values returned
 	return Class_WC, Document_Word_Occur, Total_Docs_Per_Class, Py
 
+def wordOccuredMatrix(numClasses, numWords, data):
+	wordOccured = np.zeros((7505, numWords))
+	for row in data:
+		docClass = row[0]
+		word = row[1]
+		count = row[2]
+		if count > 0:
+			wordOccured[docClass-1][word-1] = 1
+
+	return wordOccured
+	
+
+def BernouliTrain(Document_Word_Occur, Total_Docs_Per_Class, vocab, alpha, beta):
+	py = [0] *20
+	px_y = np.copy(Document_Word_Occur)
+	top = alpha - 1
+	bottom = alpha + beta - 2
+	doesWordOccur = np.copy(Document_Word_Occur)
+
+	for docClass in xrange(0,20):
+		py[docClass] = (Total_Docs_Per_Class[docClass] + top)/(sum(Total_Docs_Per_Class) + bottom)
+
+	for docClass in xrange(0,20):
+		for word in xrange(0, len(vocab)):
+			if Document_Word_Occur[docClass][word] > 0:
+				doesWordOccur[docClass][word] = 1
+
+			px_y[docClass][word] = (1 + Document_Word_Occur[docClass][word])/ (len(vocab) + Total_Docs_Per_Class[docClass])
+			#print px_y[docClass][word]
+
+	return py, px_y
+
 
 def Bernouli_Laplace(Document_Word_Occur, Total_Docs_Per_Class, vocab, alpha, beta):	
 	Pi_y = copy.deepcopy(Document_Word_Occur)
@@ -90,17 +124,35 @@ def Bernouli_Laplace(Document_Word_Occur, Total_Docs_Per_Class, vocab, alpha, be
 	for x in xrange(0,20):
 		Pi_y[x] = (Pi_y[x] + Top)/(Total_Docs_Per_Class[x] + Bottom)
 
-
+	doesWordOccur = np.zeros(20, len(vocab))
 	for y in xrange(0,20):
 		for z in xrange(0, len(vocab)):
 			if Document_Word_Occur[y][z] > 0:
-				Document_Word_Occur[y][z] = 1
+				doesWordOccur[y][z] = 1
 		
-			Px_y[y] += math.log((Pi_y[y][z]**(Document_Word_Occur[y][z]))*((1 - Pi_y[y][z])**(1 - Document_Word_Occur[y][z])), 2)
-		print Px_y[y]
+			Px_y[y] += math.log((Pi_y[y][z]**(doesWordOccur[y][z]))*((1 - Pi_y[y][z])**(1 - doesWordOccur[y][z])), 2)
+		#print Px_y[y]
 
 		
-		
+def BernouliTest(wordOccured, py, px_y, numClasses, numWords):
+	product = 1
+	docClassPrediction = -1
+	docClassProbability = -1
+	for docClass in xrange(0,numClasses):
+		product = py[docClass]
+		for word in xrange(0,numWords):
+			if (px_y[docClass][word]*(wordOccured[word])) + ((1 - px_y[docClass][word]) * (1-wordOccured[word])) == 0:
+				print px_y[docClass][word],(wordOccured[word]), (1 - px_y[docClass][word]), (wordOccured[word])
+			#print product
+			product *= (px_y[docClass][word]*(wordOccured[word])) + ((1 - px_y[docClass][word])*(1-wordOccured[word]))
+		print product
+		if product > docClassPrediction:
+			#print product
+			docClassPrediction = docClass
+			docClassProbability = product
+
+	return docClassPrediction
+				
 def Multinomial_Laplace(Class_WC, vocab, alpha):
 	Pi_y2 = Class_WC
 	ClassWords = [0]*20
@@ -109,8 +161,25 @@ def Multinomial_Laplace(Class_WC, vocab, alpha):
 		Pi_y2[x] = (Pi_y2[x] + alpha)/(ClassWords[x] + alpha*len(vocab))
 		
 	
-def problem1():
-	pass
+def problem1(py, px_y, numClasses, numWords):
+	print "Reading in testing data..."
+	testingLabels = np.genfromtxt(testLabels,delimiter='')
+	testingData = np.genfromtxt(testData,delimiter='')
+	print "Testing Data Read Complete"
+	print "Calculating word occured matrix..."
+	wordOccured = wordOccuredMatrix(numClasses, numWords, testingData)
+	print "Word Occured Matrix Complete"
+	totalCorrect = 0
+	totalDocs = 0
+	for docNum, doc in enumerate(wordOccured):
+		totalDocs += 1 
+		print "Predicting Document %d..." % (docNum)
+		predictedClass = BernouliTest(doc, py, px_y, numClasses, numWords)
+		if testingLabels[docNum]-1 == predictedClass:
+			print "Correct"
+		else:
+			print "Wrong!!"
+
 
 def problem2():
 	pass
@@ -120,12 +189,20 @@ def problem3():
 	
 def main():
 	alpha = beta = 2
+	print "Starting..."
+	print "Reading in data..."
 	newsGroup, vocab, dataLabels, actualData = readData(newsgrouplabels, vocabulary, trainLabels, trainData)
+	print "Data Read Complete"
+	print "Counting data..."
 	Class_WC, Document_Word_Occur, Total_Docs_Per_Class, Py = Class_Word_Matrix(newsGroup, vocab, dataLabels, actualData)
-	Bernouli_Laplace(Document_Word_Occur, Total_Docs_Per_Class, vocab, alpha, beta)
-	Multinomial_Laplace(Class_WC, vocab, alpha)
+	print "Counting Data Complete"
+	print "Calculating probabilities..."
+	py, px_y = BernouliTrain(Document_Word_Occur, Total_Docs_Per_Class, vocab, alpha, beta)
+	print "Probabilities Complete"
+	#Bernouli_Laplace(Document_Word_Occur, Total_Docs_Per_Class, vocab, alpha, beta)
+	#Multinomial_Laplace(Class_WC, vocab, alpha)
 	
-	#problem1()
+	problem1(py, px_y, len(newsGroup), len(vocab))
 	#problem2()
 	#problem3()
 
