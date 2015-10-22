@@ -135,16 +135,18 @@ def Bernouli_Laplace(Document_Word_Occur, Total_Docs_Per_Class, vocab, alpha, be
 
 		
 def BernouliTest(wordOccured, py, px_y, numClasses, numWords):
-	product = 1
+	product = 0
 	docClassPrediction = -1
 	docClassProbability = -1
 	for docClass in xrange(0,numClasses):
-		product = py[docClass]
+		#product = py[docClass]
+		product = 0
 		for word in xrange(0,numWords):
 			if (px_y[docClass][word]*(wordOccured[word])) + ((1 - px_y[docClass][word]) * (1-wordOccured[word])) == 0:
 				print px_y[docClass][word],(wordOccured[word]), (1 - px_y[docClass][word]), (wordOccured[word])
 			#print product
-			product *= (px_y[docClass][word]*(wordOccured[word])) + ((1 - px_y[docClass][word])*(1-wordOccured[word]))
+			#product *= (px_y[docClass][word]*(wordOccured[word])) + ((1 - px_y[docClass][word])*(1-wordOccured[word]))
+			product += (px_y[docClass][word]**(wordOccured[word])) * ((1 - px_y[docClass][word])**(1-wordOccured[word]))
 		print product
 		if product > docClassPrediction:
 			#print product
