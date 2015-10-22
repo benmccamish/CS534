@@ -82,11 +82,22 @@ def Class_Word_Matrix(Group_Labels, Vocab, Data_Labels, Data_Data):
 
 
 def Bernouli_Laplace(Document_Word_Occur, Total_Docs_Per_Class, vocab, alpha, beta):	
-	Pi_y = Document_Word_Occur
+	Pi_y = copy.deepcopy(Document_Word_Occur)
 	Top = alpha - 1
 	Bottom = alpha + beta - 2
+	Px_y = [1]*20
+
 	for x in xrange(0,20):
 		Pi_y[x] = (Pi_y[x] + Top)/(Total_Docs_Per_Class[x] + Bottom)
+
+
+	for y in xrange(0,20):
+		for z in xrange(0, len(vocab)):
+			if Document_Word_Occur[y][z] > 0:
+				Document_Word_Occur[y][z] = 1
+		
+			Px_y[y] += math.log((Pi_y[y][z]**(Document_Word_Occur[y][z]))*((1 - Pi_y[y][z])**(1 - Document_Word_Occur[y][z])), 2)
+		print Px_y[y]
 
 		
 		
