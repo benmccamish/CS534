@@ -109,7 +109,7 @@ def BernouliTrain(Document_Word_Occur, Total_Docs_Per_Class, vocab, alpha, beta)
 			if Document_Word_Occur[docClass][word] > 0:
 				doesWordOccur[docClass][word] = 1
 
-			px_y[docClass][word] = (1 + Document_Word_Occur[docClass][word])/ (len(vocab) + Total_Docs_Per_Class[docClass])
+			px_y[docClass][word] = (top + Document_Word_Occur[docClass][word])/ (bottom + Total_Docs_Per_Class[docClass])
 			#print px_y[docClass][word]
 
 	return py, px_y
