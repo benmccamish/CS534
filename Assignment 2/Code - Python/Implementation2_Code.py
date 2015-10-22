@@ -146,9 +146,9 @@ def BernouliTest(wordOccured, py, px_y, numClasses, numWords):
 				print px_y[docClass][word],(wordOccured[word]), (1 - px_y[docClass][word]), (wordOccured[word])
 			#print product
 			#product *= (px_y[docClass][word]*(wordOccured[word])) + ((1 - px_y[docClass][word])*(1-wordOccured[word]))
-			product += (px_y[docClass][word]**(wordOccured[word])) * ((1 - px_y[docClass][word])**(1-wordOccured[word]))
-		print product
-		if product > docClassPrediction:
+			product += math.log((px_y[docClass][word]**(wordOccured[word])) * ((1 - px_y[docClass][word])**(1-wordOccured[word])),2)
+		#print product
+		if product > docClassProbability:
 			#print product
 			docClassPrediction = docClass
 			docClassProbability = product
@@ -177,6 +177,7 @@ def problem1(py, px_y, numClasses, numWords):
 		totalDocs += 1 
 		print "Predicting Document %d..." % (docNum)
 		predictedClass = BernouliTest(doc, py, px_y, numClasses, numWords)
+		print predictedClass, testingLabels[docNum]
 		if testingLabels[docNum]-1 == predictedClass:
 			print "Correct"
 		else:
