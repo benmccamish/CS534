@@ -39,13 +39,14 @@ def readData(newsgrouplabels, vocabulary, data_labels, data_data):
 ###############################################################################################################################################################
 #######Create a 2-D array that shows # of word occurrences per class, also 2-D array that counts number of documents containing a certain word#################
 def Class_Word_Matrix(Group_Labels, Vocab, Data_Labels, Data_Data):
-	Class_WC = np.zeros((len(newsgrouplabels), len(Vocab))) #Number of words in vocab by number of classes
+	Class_WC = np.zeros((len(newsgrouplabels) + 1, len(Vocab))) #Number of words in vocab by number of classes
 	Document_Word_Occur = np.zeros((len(Group_Labels), len(Vocab))) #Number of words in vocab by number of classes
 	Doc_Num_Each_Class = [0]*20 #Count how many documents per class exist in train.label
 	count = 0
 	current_word = 0
 	word_count = 0
 	Total_Docs_Per_Class = [0]*20
+	Py = [0]*20
 	
 	#loop through entire data label array#
 	for x in xrange(0, len(Data_Labels)):
@@ -69,11 +70,15 @@ def Class_Word_Matrix(Group_Labels, Vocab, Data_Labels, Data_Data):
 				count = count + 1
 			else:
 				break
-
+	
+	
+	Total_Docs_Per_Class_array = np.asarray(Total_Docs_Per_Class)
+	Total_Docs_Per_Class_array = Total_Docs_Per_Class_array.astype(float)
+	Py = Total_Docs_Per_Class_array/sum(Total_Docs_Per_Class_array)
 	#print Doc_Num_Each_Class  verify values returned
 	#print Class_WC[19][12101] verify values returned
 	#print Document_Word_Occur[19][12101] verify values returned
-	return Class_WC, Document_Word_Occur, Total_Docs_Per_Class
+	return Class_WC, Document_Word_Occur, Total_Docs_Per_Class, Py
 
 
 def Bernouli_Laplace(Document_Word_Occur, Total_Docs_Per_Class, vocab, alpha, beta):	
@@ -85,13 +90,12 @@ def Bernouli_Laplace(Document_Word_Occur, Total_Docs_Per_Class, vocab, alpha, be
 
 		
 		
-def Multinomial_Laplace(Class_WC, vocab):
+def Multinomial_Laplace(Class_WC, vocab, alpha):
 	Pi_y2 = Class_WC
 	ClassWords = [0]*20
 	for x in xrange(0,20):
 		ClassWords[x] = sum(Class_WC[x])
-		Pi_y2[x] = (Pi_y2[x] + 1)/(ClassWords[x] + len(vocab))
-		print Pi_y2[x]
+		Pi_y2[x] = (Pi_y2[x] + alpha)/(ClassWords[x] + alpha*len(vocab))
 		
 	
 def problem1():
@@ -104,10 +108,11 @@ def problem3():
 	pass
 	
 def main():
+	alpha = beta = 2
 	newsGroup, vocab, dataLabels, actualData = readData(newsgrouplabels, vocabulary, trainLabels, trainData)
-	Class_WC, Document_Word_Occur, Total_Docs_Per_Class = Class_Word_Matrix(newsGroup, vocab, dataLabels, actualData)
+	Class_WC, Document_Word_Occur, Total_Docs_Per_Class, Py = Class_Word_Matrix(newsGroup, vocab, dataLabels, actualData)
 	Bernouli_Laplace(Document_Word_Occur, Total_Docs_Per_Class, vocab, alpha, beta)
-	Multinomial_Laplace(Class_WC, vocab)
+	Multinomial_Laplace(Class_WC, vocab, alpha)
 	
 	#problem1()
 	#problem2()
