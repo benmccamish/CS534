@@ -76,10 +76,22 @@ def Class_Word_Matrix(Group_Labels, Vocab, Data_Labels, Data_Data):
 	return Class_WC, Document_Word_Occur, Total_Docs_Per_Class
 
 
-def Bernouli_Laplace(Document_Word_Occur, Total_Docs_Per_Class):	
+def Bernouli_Laplace(Document_Word_Occur, Total_Docs_Per_Class, vocab, alpha, beta):	
 	Pi_y = Document_Word_Occur
+	Top = alpha - 1
+	Bottom = alpha + beta - 2
 	for x in xrange(0,20):
-		Pi_y[x] = Pi_y[x]/Total_Docs_Per_Class[x]
+		Pi_y[x] = (Pi_y[x] + Top)/(Total_Docs_Per_Class[x] + Bottom)
+
+		
+		
+def Multinomial_Laplace(Class_WC, vocab):
+	Pi_y2 = Class_WC
+	ClassWords = [0]*20
+	for x in xrange(0,20):
+		ClassWords[x] = sum(Class_WC[x])
+		Pi_y2[x] = (Pi_y2[x] + 1)/(ClassWords[x] + len(vocab))
+		print Pi_y2[x]
 		
 	
 def problem1():
@@ -94,8 +106,9 @@ def problem3():
 def main():
 	newsGroup, vocab, dataLabels, actualData = readData(newsgrouplabels, vocabulary, trainLabels, trainData)
 	Class_WC, Document_Word_Occur, Total_Docs_Per_Class = Class_Word_Matrix(newsGroup, vocab, dataLabels, actualData)
-	Bernouli_Laplace(Document_Word_Occur, Total_Docs_Per_Class)
-
+	Bernouli_Laplace(Document_Word_Occur, Total_Docs_Per_Class, vocab, alpha, beta)
+	Multinomial_Laplace(Class_WC, vocab)
+	
 	#problem1()
 	#problem2()
 	#problem3()
