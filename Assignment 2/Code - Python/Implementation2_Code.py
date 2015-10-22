@@ -85,7 +85,7 @@ def Bernouli_Laplace(Document_Word_Occur, Total_Docs_Per_Class, vocab, alpha, be
 	Pi_y = copy.deepcopy(Document_Word_Occur)
 	Top = alpha - 1
 	Bottom = alpha + beta - 2
-	Px_y = [1]*20
+	Px_y = [0]*20
 
 	for x in xrange(0,20):
 		Pi_y[x] = (Pi_y[x] + Top)/(Total_Docs_Per_Class[x] + Bottom)
