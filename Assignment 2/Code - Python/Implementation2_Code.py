@@ -137,7 +137,7 @@ def Bernouli_Laplace(Document_Word_Occur, Total_Docs_Per_Class, vocab, alpha, be
 def BernouliTest(wordOccured, py, px_y, numClasses, numWords):
 	product = 0
 	docClassPrediction = -1
-	docClassProbability = -1
+	docClassProbability = float("-inf")
 	for docClass in xrange(0,numClasses):
 		#product = py[docClass]
 		product = 0
