@@ -194,7 +194,7 @@ def Multinomial_Test(doc, log_total, numClasses, wordList, wordOccur_count, numW
 		product = 0
 		counter = 0
 		for x in wordList:
-			product = log_total[docClass][0][x - 1]*new[counter]
+			product += log_total[docClass][0][x - 1]*new[counter]
 			counter += 1
 		if product > docClassProbability:
 			docClassPrediction = docClass
