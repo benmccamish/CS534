@@ -134,20 +134,29 @@ def Bernouli_Laplace(Document_Word_Occur, Total_Docs_Per_Class, vocab, alpha, be
 		#print Px_y[y]
 
 		
-def BernouliTest(wordOccured, py, px_y, numClasses, numWords):
+def BernouliTest(wordOccured, total_log, numClasses, numWords):
 	product = 0
 	docClassPrediction = -1
 	docClassProbability = float("-inf")
+	
+	
+
+	
 	for docClass in xrange(0,numClasses):
 		#product = py[docClass]
 		product = 0
 		for word in xrange(0,numWords):
+			product += total_log[docClass][int(wordOccured[word])][word]
+			
+			'''
+
 			if (px_y[docClass][word]*(wordOccured[word])) + ((1 - px_y[docClass][word]) * (1-wordOccured[word])) == 0:
 				print px_y[docClass][word],(wordOccured[word]), (1 - px_y[docClass][word]), (wordOccured[word])
 			#print product
 			#product *= (px_y[docClass][word]*(wordOccured[word])) + ((1 - px_y[docClass][word])*(1-wordOccured[word]))
 			product += math.log((px_y[docClass][word]**(wordOccured[word])) * ((1 - px_y[docClass][word])**(1-wordOccured[word])),2)
-		#print product
+		#print product'''
+
 		if product > docClassProbability:
 			#print product
 			docClassPrediction = docClass
@@ -173,10 +182,18 @@ def problem1(py, px_y, numClasses, numWords):
 	print "Word Occured Matrix Complete"
 	totalCorrect = 0
 	totalDocs = 0
+	total_log = []
+	for c in range(len(px_y)):
+		log_positive = np.log(px_y[c])
+		log_negative = np.log(1 - px_y[c])
+		class_log = [log_negative, log_positive]
+		total_log.append(class_log)
+
 	for docNum, doc in enumerate(wordOccured):
 		totalDocs += 1 
 		print "Predicting Document %d..." % (docNum)
-		predictedClass = BernouliTest(doc, py, px_y, numClasses, numWords)
+		
+		predictedClass = BernouliTest(doc, total_log, numClasses, numWords)
 		print predictedClass, testingLabels[docNum]
 		if testingLabels[docNum]-1 == predictedClass:
 			print "Correct"
