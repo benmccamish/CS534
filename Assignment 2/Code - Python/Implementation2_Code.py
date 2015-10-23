@@ -10,6 +10,7 @@ from numpy.linalg import inv
 import random
 import copy
 import math
+import operator
 
 # Not sure what script is for...
 #script = 'data/'
@@ -83,6 +84,41 @@ def Class_Word_Matrix(Group_Labels, Vocab, Data_Labels, Data_Data):
 	#print Document_Word_Occur[19][12101] verify values returned
 	return Class_WC, Document_Word_Occur, Total_Docs_Per_Class, Py
 
+def zipfsLaw(vocab, actualData):
+	dictOfWords = {}
+	listOfWords = []
+	wordIndex = {}
+	for word in vocab:
+		listOfWords.append(word)
+		dictOfWords[word.strip()] = 0
+
+	for row in actualData:
+		dictOfWords[listOfWords[int(row[1])]] += int(row[2])
+
+	return listOfWords, sorted(dictOfWords.items(), key=operator.itemgetter(1), reverse = True)
+
+def removeTopX(actualData, zipfsWords, x, listOfWords):
+	topXWords = []
+	print "Top %d Words Are:" % (x)
+	for i in xrange(0, x):
+		print i+1, zipfsWords[i]
+		topXWords.append(zipfsWords[i][0])
+
+	for word in topXWords:
+		actualData = actualData[actualData[:,1] != listOfWords.index(word)+1]
+
+	#Double Check
+	for element in actualData:
+		if element[1] == listOfWords.index('in')+1:
+			print "A Word Wasn't Removed!!!!!!!!!!"
+		
+
+	return actualData
+
+def performZipfsFilter(vocab, actualData, x):
+	listOfWords, zipfsWords = zipfsLaw(vocab, actualData)
+	return removeTopX(actualData, zipfsWords, x, listOfWords)
+
 def wordOccuredMatrix(numClasses, numWords, data):
 	wordOccured = np.zeros((7505, numWords))
 	wordOccur_count = np.zeros((7505, numWords))
@@ -119,52 +155,18 @@ def BernouliTrain(Document_Word_Occur, Total_Docs_Per_Class, vocab, alpha, beta)
 			#print px_y[docClass][word]
 
 	return py, px_y
-
-
-def Bernouli_Laplace(Document_Word_Occur, Total_Docs_Per_Class, vocab, alpha, beta):	
-	Pi_y = copy.deepcopy(Document_Word_Occur)
-	Top = alpha - 1
-	Bottom = alpha + beta - 2
-	Px_y = [0]*20
-
-	for x in xrange(0,20):
-		Pi_y[x] = (Pi_y[x] + Top)/(Total_Docs_Per_Class[x] + Bottom)
-
-	doesWordOccur = np.zeros(20, len(vocab))
-	for y in xrange(0,20):
-		for z in xrange(0, len(vocab)):
-			if Document_Word_Occur[y][z] > 0:
-				doesWordOccur[y][z] = 1
-		
-			Px_y[y] += math.log((Pi_y[y][z]**(doesWordOccur[y][z]))*((1 - Pi_y[y][z])**(1 - doesWordOccur[y][z])), 2)
-		#print Px_y[y]
-
 		
 def BernouliTest(wordOccured, total_log, numClasses, biases, wordList, Py):
 	product = 0
 	docClassPrediction = -1
 	docClassProbability = float("-inf")
 	
-	
-
-	
 	for docClass in xrange(0,numClasses):
-		#product = py[docClass]
 		product = biases[docClass] + Py[docClass]
 		for word in wordList:
 			product += total_log[docClass][1][word - 1] - total_log[docClass][0][word - 1]
-			
-			'''
-
-			if (px_y[docClass][word]*(wordOccured[word])) + ((1 - px_y[docClass][word]) * (1-wordOccured[word])) == 0:
-				print px_y[docClass][word],(wordOccured[word]), (1 - px_y[docClass][word]), (wordOccured[word])
-			#print product
-			#product *= (px_y[docClass][word]*(wordOccured[word])) + ((1 - px_y[docClass][word])*(1-wordOccured[word]))
-			product += math.log((px_y[docClass][word]**(wordOccured[word])) * ((1 - px_y[docClass][word])**(1-wordOccured[word])),2)
-		#print product'''
 
 		if product > docClassProbability:
-			#print product
 			docClassPrediction = docClass
 			docClassProbability = product
 
@@ -251,7 +253,7 @@ def problem2(Py, Pi_y2, numClasses, numWords):
 		logarithmic = np.log(Pi_y2[a])
 		class_log = [logarithmic]
 		log_total.append(class_log)
-	#print log_total	
+
 	for docNum, doc in enumerate(wordOccured):
 		totalDocs += 1 
 		print "Predicting Document %d..." % (docNum)
@@ -272,14 +274,18 @@ def main():
 	print "Reading in data..."
 	newsGroup, vocab, dataLabels, actualData = readData(newsgrouplabels, vocabulary, trainLabels, trainData)
 	print "Data Read Complete"
+
+	#Comment this out if you want to run without zipfs
+	print "Performing Zipfs Law"
+	actualData = performZipfsFilter(vocab, actualData, 10)
+	print "Zipfs Law Complete"
+	
 	print "Counting data..."
 	Class_WC, Document_Word_Occur, Total_Docs_Per_Class, Py = Class_Word_Matrix(newsGroup, vocab, dataLabels, actualData)
 	print "Counting Data Complete"
 	print "Calculating probabilities..."
 	py, px_y = BernouliTrain(Document_Word_Occur, Total_Docs_Per_Class, vocab, alpha, beta)
 	print "Probabilities Complete"
-	#Bernouli_Laplace(Document_Word_Occur, Total_Docs_Per_Class, vocab, alpha, beta)
-	#Multinomial_Laplace(Class_WC, vocab, alpha)
 	Pi_y2 = Multinomial_Train(Class_WC, vocab, alpha)
 	
 	#problem1(py, px_y, len(newsGroup), len(vocab), Py)
