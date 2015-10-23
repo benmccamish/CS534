@@ -182,17 +182,19 @@ def Multinomial_Train(Class_WC, vocab, alpha):
 	
 def Multinomial_Test(doc, log_total, numClasses, wordList, wordOccur_count, numWords, Py):
 	product = 0
+	counter = -1
 	docClassPrediction = -1
 	docClassProbability = float("-inf")
+	new = [wordOccur_count[i-1] for i in wordList]
 	
 	for docClass in xrange(0,numClasses):
-		product = Py[docClass]
-
-		for x in xrange(0, numWords):
-			product += log_total[docClass][0][x]*wordOccur_count[x]
-
+		
+		product = 0
+		counter = 0
+		for x in wordList:
+			product = log_total[docClass][0][x - 1]*new[counter]
+			counter += 1
 		if product > docClassProbability:
-			#print product
 			docClassPrediction = docClass
 			docClassProbability = product
 
@@ -241,20 +243,20 @@ def problem2(Py, Pi_y2, numClasses, numWords):
 	print "Word Occured Matrix Complete"
 	totalCorrect = 0
 	totalDocs = 0
-	
-	log_total = []
 
+	log_total = []
+	print Pi_y2
 	
 	for a in range(len(Pi_y2)):
 		logarithmic = np.log(Pi_y2[a])
 		class_log = [logarithmic]
 		log_total.append(class_log)
-		
+	#print log_total	
 	for docNum, doc in enumerate(wordOccured):
 		totalDocs += 1 
 		print "Predicting Document %d..." % (docNum)
-		
-		predictedClass = Multinomial_Test(doc, log_total, numClasses, wordList[docNum - 1], wordOccur_count[docNum], numWords, Py)
+
+		predictedClass = Multinomial_Test(doc, log_total, numClasses, wordList[docNum], wordOccur_count[docNum], numWords, Py)
 		print predictedClass + 1, testingLabels[docNum]
 		if testingLabels[docNum]-1 == predictedClass:
 			print "Correct"
