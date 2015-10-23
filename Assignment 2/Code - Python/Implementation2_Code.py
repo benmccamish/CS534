@@ -84,14 +84,17 @@ def Class_Word_Matrix(Group_Labels, Vocab, Data_Labels, Data_Data):
 
 def wordOccuredMatrix(numClasses, numWords, data):
 	wordOccured = np.zeros((7505, numWords))
+	wordList = [ [] for i in range(7505)]
+	print len(wordList)
 	for row in data:
 		docClass = row[0]
 		word = row[1]
 		count = row[2]
 		if count > 0:
 			wordOccured[docClass-1][word-1] = 1
+		wordList[int(docClass) -1].append(word);
 
-	return wordOccured
+	return wordOccured, wordList
 	
 
 def BernouliTrain(Document_Word_Occur, Total_Docs_Per_Class, vocab, alpha, beta):
@@ -134,7 +137,7 @@ def Bernouli_Laplace(Document_Word_Occur, Total_Docs_Per_Class, vocab, alpha, be
 		#print Px_y[y]
 
 		
-def BernouliTest(wordOccured, total_log, numClasses, numWords):
+def BernouliTest(wordOccured, total_log, numClasses, biases, wordList):
 	product = 0
 	docClassPrediction = -1
 	docClassProbability = float("-inf")
@@ -144,9 +147,9 @@ def BernouliTest(wordOccured, total_log, numClasses, numWords):
 	
 	for docClass in xrange(0,numClasses):
 		#product = py[docClass]
-		product = 0
-		for word in xrange(0,numWords):
-			product += total_log[docClass][int(wordOccured[word])][word]
+		product = biases[docClass]
+		for word in wordList:
+			product += total_log[docClass][1][word - 1] - total_log[docClass][0][word - 1]
 			
 			'''
 
@@ -178,14 +181,17 @@ def problem1(py, px_y, numClasses, numWords):
 	testingData = np.genfromtxt(testData,delimiter='')
 	print "Testing Data Read Complete"
 	print "Calculating word occured matrix..."
-	wordOccured = wordOccuredMatrix(numClasses, numWords, testingData)
+	wordOccured, wordList = wordOccuredMatrix(numClasses, numWords, testingData)
 	print "Word Occured Matrix Complete"
 	totalCorrect = 0
 	totalDocs = 0
+	
 	total_log = []
+	biases = []
 	for c in range(len(px_y)):
 		log_positive = np.log(px_y[c])
 		log_negative = np.log(1 - px_y[c])
+		biases.append(np.sum(log_negative))
 		class_log = [log_negative, log_positive]
 		total_log.append(class_log)
 
@@ -193,7 +199,7 @@ def problem1(py, px_y, numClasses, numWords):
 		totalDocs += 1 
 		print "Predicting Document %d..." % (docNum)
 		
-		predictedClass = BernouliTest(doc, total_log, numClasses, numWords)
+		predictedClass = BernouliTest(doc, total_log, numClasses, biases, wordList[docNum - 1])
 		print predictedClass, testingLabels[docNum]
 		if testingLabels[docNum]-1 == predictedClass:
 			print "Correct"
