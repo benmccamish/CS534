@@ -1,4 +1,3 @@
-from __future__ import division
 import csv
 import matplotlib as mpl
 import numpy as np
@@ -8,6 +7,7 @@ from sys import argv
 from copy import copy, deepcopy
 from numpy.linalg import inv
 import random
+import copy
 import math
 
 # Not sure what script is for...
@@ -84,6 +84,7 @@ def Class_Word_Matrix(Group_Labels, Vocab, Data_Labels, Data_Data):
 
 def wordOccuredMatrix(numClasses, numWords, data):
 	wordOccured = np.zeros((7505, numWords))
+	wordOccur_count = np.zeros((7505, numWords))
 	wordList = [ [] for i in range(7505)]
 	print len(wordList)
 	for row in data:
@@ -92,9 +93,10 @@ def wordOccuredMatrix(numClasses, numWords, data):
 		count = row[2]
 		if count > 0:
 			wordOccured[docClass-1][word-1] = 1
+			wordOccur_count[docClass-1][word-1] = count
 		wordList[int(docClass) -1].append(word);
 
-	return wordOccured, wordList
+	return wordOccured, wordList, wordOccur_count
 	
 
 def BernouliTrain(Document_Word_Occur, Total_Docs_Per_Class, vocab, alpha, beta):
@@ -137,7 +139,7 @@ def Bernouli_Laplace(Document_Word_Occur, Total_Docs_Per_Class, vocab, alpha, be
 		#print Px_y[y]
 
 		
-def BernouliTest(wordOccured, total_log, numClasses, biases, wordList):
+def BernouliTest(wordOccured, total_log, numClasses, biases, wordList, Py):
 	product = 0
 	docClassPrediction = -1
 	docClassProbability = float("-inf")
@@ -147,7 +149,7 @@ def BernouliTest(wordOccured, total_log, numClasses, biases, wordList):
 	
 	for docClass in xrange(0,numClasses):
 		#product = py[docClass]
-		product = biases[docClass]
+		product = biases[docClass] + Py[docClass]
 		for word in wordList:
 			product += total_log[docClass][1][word - 1] - total_log[docClass][0][word - 1]
 			
@@ -167,21 +169,42 @@ def BernouliTest(wordOccured, total_log, numClasses, biases, wordList):
 
 	return docClassPrediction
 				
-def Multinomial_Laplace(Class_WC, vocab, alpha):
+def Multinomial_Train(Class_WC, vocab, alpha):
 	Pi_y2 = Class_WC
 	ClassWords = [0]*20
 	for x in xrange(0,20):
 		ClassWords[x] = sum(Class_WC[x])
 		Pi_y2[x] = (Pi_y2[x] + alpha)/(ClassWords[x] + alpha*len(vocab))
 		
+	return Pi_y2
 	
-def problem1(py, px_y, numClasses, numWords):
+	
+def Multinomial_Test(doc, log_total, numClasses, wordList, wordOccur_count, numWords, Py):
+	product = 0
+	docClassPrediction = -1
+	docClassProbability = float("-inf")
+	
+	for docClass in xrange(0,numClasses):
+		product = Py[docClass]
+
+		for x in xrange(0, numWords):
+			product += log_total[docClass][0][x]*wordOccur_count[x]
+
+		if product > docClassProbability:
+			#print product
+			docClassPrediction = docClass
+			docClassProbability = product
+
+	return docClassPrediction		
+	
+	
+def problem1(py, px_y, numClasses, numWords, Py):
 	print "Reading in testing data..."
 	testingLabels = np.genfromtxt(testLabels,delimiter='')
 	testingData = np.genfromtxt(testData,delimiter='')
 	print "Testing Data Read Complete"
 	print "Calculating word occured matrix..."
-	wordOccured, wordList = wordOccuredMatrix(numClasses, numWords, testingData)
+	wordOccured, wordList, wordOccur_count = wordOccuredMatrix(numClasses, numWords, testingData)
 	print "Word Occured Matrix Complete"
 	totalCorrect = 0
 	totalDocs = 0
@@ -199,16 +222,43 @@ def problem1(py, px_y, numClasses, numWords):
 		totalDocs += 1 
 		print "Predicting Document %d..." % (docNum)
 		
-		predictedClass = BernouliTest(doc, total_log, numClasses, biases, wordList[docNum - 1])
-		print predictedClass, testingLabels[docNum]
+		predictedClass = BernouliTest(doc, total_log, numClasses, biases, wordList[docNum], Py)
+		print predictedClass + 1, testingLabels[docNum]
 		if testingLabels[docNum]-1 == predictedClass:
 			print "Correct"
 		else:
 			print "Wrong!!"
 
 
-def problem2():
-	pass
+def problem2(Py, Pi_y2, numClasses, numWords):
+	print "Reading in testing data..."
+	testingLabels = np.genfromtxt(testLabels,delimiter='')
+	testingData = np.genfromtxt(testData,delimiter='')
+	print "Testing Data Read Complete"
+	print "Calculating word occured matrix..."
+	wordOccured, wordList, wordOccur_count = wordOccuredMatrix(numClasses, numWords, testingData)
+	print "Word Occured Matrix Complete"
+	totalCorrect = 0
+	totalDocs = 0
+	
+	log_total = []
+
+	
+	for a in range(len(Pi_y2)):
+		logarithmic = np.log(Pi_y2[a])
+		class_log = [logarithmic]
+		log_total.append(class_log)
+		
+	for docNum, doc in enumerate(wordOccured):
+		totalDocs += 1 
+		print "Predicting Document %d..." % (docNum)
+		
+		predictedClass = Multinomial_Test(doc, log_total, numClasses, wordList[docNum - 1], wordOccur_count[docNum], numWords, Py)
+		print predictedClass + 1, testingLabels[docNum]
+		if testingLabels[docNum]-1 == predictedClass:
+			print "Correct"
+		else:
+			print "Wrong!!"
 
 def problem3():
 	pass
@@ -227,9 +277,10 @@ def main():
 	print "Probabilities Complete"
 	#Bernouli_Laplace(Document_Word_Occur, Total_Docs_Per_Class, vocab, alpha, beta)
 	#Multinomial_Laplace(Class_WC, vocab, alpha)
+	Pi_y2 = Multinomial_Train(Class_WC, vocab, alpha)
 	
-	problem1(py, px_y, len(newsGroup), len(vocab))
-	#problem2()
+	#problem1(py, px_y, len(newsGroup), len(vocab), Py)
+	problem2(Py, Pi_y2, len(newsGroup), len(vocab))
 	#problem3()
 
 
