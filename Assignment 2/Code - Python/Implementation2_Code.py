@@ -94,23 +94,24 @@ def zipfsLaw(vocab, actualData):
 
 	return listOfWords, sorted(dictOfWords.items(), key=operator.itemgetter(1), reverse = True)
 
+def removeWords(listOfWords, actualData):
+	for word in listOfWords:
+		actualData = actualData[actualData[:,1] != word+1]
+	return actualData
+
 def removeTopX(actualData, zipfsWords, x, listOfWords):
 	topXWords = []
+	wordIndexes = list()
 	print "Top %d Words Are:" % (x)
 	for i in xrange(0, x):
 		print i+1, zipfsWords[i]
 		topXWords.append(zipfsWords[i][0])
 
 	for word in topXWords:
+		wordIndexes.append(listOfWords.index(word)+1)
 		actualData = actualData[actualData[:,1] != listOfWords.index(word)+1]
-
-	#Double Check
-	for element in actualData:
-		if element[1] == listOfWords.index('in')+1:
-			print "A Word Wasn't Removed!!!!!!!!!!"
 		
-
-	return actualData
+	return wordIndexes, actualData
 
 def performZipfsFilter(vocab, actualData, x):
 	listOfWords, zipfsWords = zipfsLaw(vocab, actualData)
@@ -132,7 +133,6 @@ def wordOccuredMatrix(numClasses, numWords, data):
 
 	return wordOccured, wordList, wordOccur_count
 	
-
 def BernouliTrain(Document_Word_Occur, Total_Docs_Per_Class, vocab, alpha, beta):
 	py = [0] *20
 	px_y = np.copy(Document_Word_Occur)
@@ -177,8 +177,7 @@ def Multinomial_Train(Class_WC, vocab, alpha):
 		Pi_y2[x] = (Pi_y2[x] + alpha)/(ClassWords[x] + alpha*len(vocab))
 		
 	return Pi_y2
-	
-	
+
 def Multinomial_Test(doc, log_total, numClasses, wordList, wordOccur_count, numWords, Py):
 	product = 0
 	counter = -1
@@ -198,12 +197,12 @@ def Multinomial_Test(doc, log_total, numClasses, wordList, wordOccur_count, numW
 			docClassProbability = product
 
 	return docClassPrediction		
-	
-	
-def problem1(py, px_y, numClasses, numWords, Py):
+		
+def problem1(py, px_y, numClasses, numWords, Py, wordIndexes):
 	print "Reading in testing data..."
 	testingLabels = np.genfromtxt(testLabels,delimiter='')
 	testingData = np.genfromtxt(testData,delimiter='')
+	testingData = removeWords(wordIndexes, testingData)
 	print "Testing Data Read Complete"
 	print "Calculating word occured matrix..."
 	wordOccured, wordList, wordOccur_count = wordOccuredMatrix(numClasses, numWords, testingData)
@@ -237,10 +236,11 @@ def problem1(py, px_y, numClasses, numWords, Py):
 	print right		
 	np.savetxt('Bernoulli_Confusion.csv', confusion_matrix, delimiter=',')
 
-def problem2(Py, Pi_y2, numClasses, numWords):
+def problem2(Py, Pi_y2, numClasses, numWords, wordIndexes):
 	print "Reading in testing data..."
 	testingLabels = np.genfromtxt(testLabels,delimiter='')
 	testingData = np.genfromtxt(testData,delimiter='')
+	testingData = removeWords(wordIndexes, testingData)
 	print "Testing Data Read Complete"
 	print "Calculating word occured matrix..."
 	wordOccured, wordList, wordOccur_count = wordOccuredMatrix(numClasses, numWords, testingData)
@@ -276,6 +276,7 @@ def problem2(Py, Pi_y2, numClasses, numWords):
 
 	print right	
 	np.savetxt('Multinomial_Confusion.csv', confusion_matrix2, delimiter=',')	
+
 def problem3():
 	pass
 	
@@ -288,9 +289,9 @@ def main():
 	print "Data Read Complete"
 
 	#Comment this out if you want to run without zipfs
-    #print "Performing Zipfs Law"
-    #actualData = performZipfsFilter(vocab, actualData, 10)
-    #print "Zipfs Law Complete"
+	print "Performing Zipfs Law"
+	wordIndexes, actualData = performZipfsFilter(vocab, actualData, 300)
+	print "Zipfs Law Complete"
 	
 	print "Counting data..."
 	Class_WC, Document_Word_Occur, Total_Docs_Per_Class, Py = Class_Word_Matrix(newsGroup, vocab, dataLabels, actualData)
@@ -300,8 +301,8 @@ def main():
 	print "Probabilities Complete"
 	Pi_y2 = Multinomial_Train(Class_WC, vocab, alpha2)
 	
-	#problem1(py, px_y, len(newsGroup), len(vocab), Py)
-	problem2(Py, Pi_y2, len(newsGroup), len(vocab))
+	problem1(py, px_y, len(newsGroup), len(vocab), Py, wordIndexes)
+	#problem2(Py, Pi_y2, len(newsGroup), len(vocab), wordIndexes)
 	#problem3()
 
 
