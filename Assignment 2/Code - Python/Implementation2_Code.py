@@ -188,7 +188,7 @@ def Multinomial_Test(doc, log_total, numClasses, wordList, wordOccur_count, numW
 	
 	for docClass in xrange(0,numClasses):
 		
-		product = 0
+		product = Py[docClass]
 		counter = 0
 		for x in wordList:
 			product += log_total[docClass][0][x - 1]*new[counter]
@@ -210,6 +210,8 @@ def problem1(py, px_y, numClasses, numWords, Py):
 	print "Word Occured Matrix Complete"
 	totalCorrect = 0
 	totalDocs = 0
+	right = 0
+	confusion_matrix = np.zeros((20, 20))
 	
 	total_log = []
 	biases = []
@@ -228,9 +230,12 @@ def problem1(py, px_y, numClasses, numWords, Py):
 		print predictedClass + 1, testingLabels[docNum]
 		if testingLabels[docNum]-1 == predictedClass:
 			print "Correct"
+			right += 1
 		else:
 			print "Wrong!!"
-
+		confusion_matrix[testingLabels[docNum]-1][predictedClass] += 1
+	print right		
+	np.savetxt('Bernoulli_Confusion.csv', confusion_matrix, delimiter=',')
 
 def problem2(Py, Pi_y2, numClasses, numWords):
 	print "Reading in testing data..."
@@ -242,7 +247,10 @@ def problem2(Py, Pi_y2, numClasses, numWords):
 	print "Word Occured Matrix Complete"
 	totalCorrect = 0
 	totalDocs = 0
+	right = 0
+	confusion_matrix2 = np.zeros((20, 20))
 
+        
 	log_total = []
 	print Pi_y2
 	
@@ -259,23 +267,30 @@ def problem2(Py, Pi_y2, numClasses, numWords):
 		print predictedClass + 1, testingLabels[docNum]
 		if testingLabels[docNum]-1 == predictedClass:
 			print "Correct"
+			right += 1
+          
+                
 		else:
 			print "Wrong!!"
+		confusion_matrix2[testingLabels[docNum]-1][predictedClass] += 1
 
+	print right	
+	np.savetxt('Multinomial_Confusion.csv', confusion_matrix2, delimiter=',')	
 def problem3():
 	pass
 	
 def main():
 	alpha = beta = 2
+	alpha2 = 1
 	print "Starting..."
 	print "Reading in data..."
 	newsGroup, vocab, dataLabels, actualData = readData(newsgrouplabels, vocabulary, trainLabels, trainData)
 	print "Data Read Complete"
 
 	#Comment this out if you want to run without zipfs
-	print "Performing Zipfs Law"
-	actualData = performZipfsFilter(vocab, actualData, 10)
-	print "Zipfs Law Complete"
+    #print "Performing Zipfs Law"
+    #actualData = performZipfsFilter(vocab, actualData, 10)
+    #print "Zipfs Law Complete"
 	
 	print "Counting data..."
 	Class_WC, Document_Word_Occur, Total_Docs_Per_Class, Py = Class_Word_Matrix(newsGroup, vocab, dataLabels, actualData)
@@ -283,7 +298,7 @@ def main():
 	print "Calculating probabilities..."
 	py, px_y = BernouliTrain(Document_Word_Occur, Total_Docs_Per_Class, vocab, alpha, beta)
 	print "Probabilities Complete"
-	Pi_y2 = Multinomial_Train(Class_WC, vocab, alpha)
+	Pi_y2 = Multinomial_Train(Class_WC, vocab, alpha2)
 	
 	#problem1(py, px_y, len(newsGroup), len(vocab), Py)
 	problem2(Py, Pi_y2, len(newsGroup), len(vocab))
