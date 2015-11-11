@@ -1,6 +1,8 @@
-
+from __future__ import division
 import csv
 import math
+import random
+import copy as cp
 
 
 
@@ -106,18 +108,70 @@ def info_gain_acc(Data, Labels, Column):
 	gain = total_uncertainty - (zero_portion * zero_u) - (one_portion * one_u)
 	return gain, acc
 
+
+def Bootstrap_Sampling(Train_X, Train_Y, size):
+	Boot_StrapsX = []
+	Boot_StrapsY = []
+
+	for z in range(0, len(Train_X)):
+		Train_X[z].append(Train_Y[z])
+
+
+	for x in range(0,size):
+		SampleX = []
+		SampleY = []
+		for y in range(0, len(Train_X)):
+			Current_Sample = cp.deepcopy(random.choice(Train_X))
+			SampleY.append(Current_Sample[-1])
+			Current_Sample.pop()
+			SampleX.append(Current_Sample)
+			
+			
+
+		Boot_StrapsX.append(SampleX)
+		Boot_StrapsY.append(SampleY)
+	return Boot_StrapsX, Boot_StrapsY
+
+	
+	
+def Correct_Stump(Train_DataX, Train_DataY):	
+	Gains = []
+
+	for c in range(len(Train_DataX[0])):
+
+		info, train_acc = info_gain_acc(Train_DataX, Train_DataY, c)
+		Gains.append(info)
+	max_value = max(Gains)
+	max_index = Gains.index(max_value)
+	print max_index
+
+
+
+
+
+
+
 def problem_1(Train_X, Train_Y, Test_X, Test_Y):
 	for c in range(len(Train_X[0])):
 		info, train_acc = info_gain_acc(Train_X, Train_Y, c)
 		who_cares, test_acc = info_gain_acc(Test_X, Test_Y, c)
 		print("%f \t%f" % (info, test_acc))
 
+def problem_2Bagging(Train_X, Train_Y, Test_X, Test_Y, size):	
+	Boot_StrapsX, Boot_StrapsY = Bootstrap_Sampling(Train_X, Train_Y, size)	
+	
 
+	for x in range(0, size):
+
+		Correct_Stump(Boot_StrapsX[x], Boot_StrapsY[x])
+		
+		
+		
 def stump_accuracy(Data, Labels, Column):
 	pass
 
 def main():
-
+	size = 5
 	Train_X, Train_Y, Test_X, Test_Y = read_csv_data("SPECT-train.csv", "SPECT-test.csv")
 	
 	print(len(Train_X))
@@ -127,7 +181,7 @@ def main():
 	print(len(Test_Y))
 
 	problem_1(Train_X, Train_Y, Test_X, Test_Y)
-
+	problem_2Bagging(Train_X, Train_Y, Test_X, Test_Y, size)
 
 if __name__ == "__main__":
 	main()
