@@ -6,21 +6,6 @@ import copy as cp
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def read_csv_data(train_name, test_name):
 
 	Train_X = []
@@ -53,8 +38,10 @@ def uncertainty(Data, Labels):
 	for i in range(len(Data)):
 		if (Labels[i] == 0):
 			total_zero += 1
-
-	zero_portion = total_zero /  float(len(Data))
+	zero_portion = 0.0
+	if (len(Data)):
+		zero_portion = total_zero /  float(len(Data))
+	
 	one_portion = 1 - zero_portion
 	u = 0
 	if (zero_portion != 0):
@@ -77,6 +64,121 @@ def correct_num(Labels):
 		return one, 'one'
 	else:
 		return zero, 'zero'
+
+
+def majority_label(Labels):
+	zero = 0
+	one = 0
+	for l in Labels:
+		if (l == 1):
+			one += 1
+		else:
+			zero += 1
+
+
+	if (one >= zero):
+		return 1
+	else:
+		return 0
+
+
+
+class Stump:
+	def __init__(self):
+		self.learned_info_gain = 0
+		self.leaf_labels = [0, 0]
+		self.decision_column = -1
+	
+	def learn_stump(self, Data, Labels, Column=None):
+		total_uncertainty = uncertainty(Data, Labels)
+	
+		if (Column == None):
+			gain = []
+			learned_leaf_labels = []
+			for Column in range(len(Data[0])):
+				branch_zero = []
+				branch_zero_labels = []
+				
+				branch_one = []
+				branch_one_labels = []
+
+				for i in range(len(Data)):
+					if (Data[i][Column] == 0):
+						branch_zero.append(Data[i])
+						branch_zero_labels.append(Labels[i])
+					else:
+						branch_one.append(Data[i])
+						branch_one_labels.append(Labels[i])
+
+				zero_portion = float(len(branch_zero)) / float(len(Data))
+				one_portion = 1 - zero_portion
+
+				zero_u = uncertainty(branch_zero, branch_zero_labels)
+				one_u = uncertainty(branch_one, branch_one_labels)
+				
+				info_gain = total_uncertainty - (zero_portion * zero_u) - (one_portion * one_u)
+
+				learned_labels = [0, 0]
+				learned_labels[0] = majority_label(branch_zero_labels)
+				learned_labels[1] = majority_label(branch_one_labels)
+				
+				gain.append(info_gain)
+				learned_leaf_labels.append(learned_labels)
+			
+			self.learned_info_gain = max(gain)
+			self.decision_column = gain.index(self.learned_info_gain)
+			
+			self.leaf_labels[0] = learned_leaf_labels[self.decision_column][0]
+			self.leaf_labels[1] = learned_leaf_labels[self.decision_column][1]
+		else:
+			branch_zero = []
+			branch_zero_labels = []
+			
+			branch_one = []
+			branch_one_labels = []
+
+			for i in range(len(Data)):
+				if (Data[i][Column] == 0):
+					branch_zero.append(Data[i])
+					branch_zero_labels.append(Labels[i])
+				else:
+					branch_one.append(Data[i])
+					branch_one_labels.append(Labels[i])
+
+			zero_portion = float(len(branch_zero)) / float(len(Data))
+			one_portion = 1 - zero_portion
+
+			zero_u = uncertainty(branch_zero, branch_zero_labels)
+			one_u = uncertainty(branch_one, branch_one_labels)
+			
+			self.learned_info_gain = total_uncertainty - (zero_portion * zero_u) - (one_portion * one_u)
+
+			self.leaf_labels[0] = majority_label(branch_zero_labels)
+			self.leaf_labels[1] = majority_label(branch_one_labels)
+			
+			self.decision_column = Column
+	
+		
+	def test_accuracy(self, Data, Labels):
+		predicted_labels = []
+		correct = 0.0
+		for i in range(len(Labels)):
+			if (Data[i][self.decision_column]):
+				predicted_labels.append(self.leaf_labels[1])
+				if (Labels[i] == self.leaf_labels[1]):
+					correct += 1
+			else:
+				predicted_labels.append(self.leaf_labels[0])
+				if (Labels[i] == self.leaf_labels[0]):
+					correct += 1
+		acc = correct / float(len(Labels))
+		return acc, predicted_labels
+
+
+
+
+
+
 
 #Added outputs zero_correct, label_zero, one_correct, label_one.  zero_correct, label_zero infers the feature is 0 and the label is the maximum correct targets in it.#
 def info_gain_acc(Data, Labels, Column):
@@ -135,7 +237,29 @@ def Bootstrap_Sampling(Train_X, Train_Y, size):
 		Boot_StrapsY.append(SampleY)
 	return Boot_StrapsX, Boot_StrapsY
 
-	
+def Better_Bootstrap(Train_X, Train_Y, size):
+	Boot_StrapsX = []
+	Boot_StrapsY = []
+
+	Full_Sample = cp.deepcopy(Train_X)
+	for z in range(0, len(Train_X)):
+		Full_Sample[z].append(Train_Y[z])
+
+
+	for x in range(0,size):
+		SampleX = []
+		SampleY = []
+		for y in range(0, len(Train_X)):
+			Current_Sample = cp.deepcopy(random.choice(Full_Sample))
+			SampleY.append(Current_Sample[-1])
+			Current_Sample.pop()
+			SampleX.append(Current_Sample)
+			
+			
+
+		Boot_StrapsX.append(SampleX)
+		Boot_StrapsY.append(SampleY)
+	return Boot_StrapsX, Boot_StrapsY	
 	
 def Correct_Stump(Train_DataX, Train_DataY, Test_X, Test_Y):	
 	Gains = []
@@ -168,10 +292,18 @@ def Correct_Stump(Train_DataX, Train_DataY, Test_X, Test_Y):
 
 def problem_1(Train_X, Train_Y, Test_X, Test_Y):
 
+	d_stump = Stump()
 	for c in range(len(Train_X[0])):
-		info, train_acc, zero_correct, label_zero, one_correct, label_one = info_gain_acc(Train_X, Train_Y, c)
-		who_cares, test_acc,  zero_correct, label_zero, one_correct, label_one = info_gain_acc(Test_X, Test_Y, c)
-		print("%f \t%f" % (who_cares, test_acc))
+		d_stump.learn_stump(Train_X, Train_Y, c)
+		info = d_stump.learned_info_gain
+		acc = d_stump.test_accuracy(Test_X, Test_Y)[0]
+		train_acc = d_stump.test_accuracy(Train_X, Train_Y)[0]
+		print("%f \t%f" % (info, acc))
+	
+	my_stump.learn_stump(Train_X, Train_Y)
+	info = my_stump.learned_info_gain
+	acc = my_stump.test_accuracy(Test_X, Test_Y)[0]
+	print("%f \t%f" % (info, acc))
 
 
 def problem_2Bagging(Train_X, Train_Y, Test_X, Test_Y, size):	
@@ -232,6 +364,62 @@ def problem_2Bagging(Train_X, Train_Y, Test_X, Test_Y, size):
 		if Train_Y[r] == Predicted_TargetsTRAIN[r]:
 			count_Train += 1
 	print count_Train, len(Train_Y)		
+
+def voted_predict(predictions, size):
+	threshold = size / 2.0
+	voted_guess = []
+	
+	for sample in range(len(predictions[0])):
+		guess = 0.0
+		for pred in range(size):
+			guess += predictions[pred][sample]
+		
+		if (guess > threshold):
+			voted_guess.append(1)
+		else:
+			voted_guess.append(0)
+	
+	return voted_guess
+
+def calc_acc(pred, label):
+	correct = 0.0
+	for i in range(len(pred)):
+		if (pred[i] == label[i]):
+			correct += 1
+	
+	return correct / float(len(pred))
+	
+def problem_2(Train_X, Train_Y, Test_X, Test_Y):
+	Bootstrap_X, Bootstrap_Y = Better_Bootstrap(Train_X, Train_Y, 30)	
+	stumps = []
+	for i in range(30):
+		s = Stump()
+		s.learn_stump(Bootstrap_X[i], Bootstrap_Y[i])
+		stumps.append(s)
+		print(s.test_accuracy(Test_X, Test_Y)[0])
+
+	all_train_predictions = []
+	all_test_predictions = []
+	
+	for i in range(30):
+		all_train_predictions.append(stumps[i].test_accuracy(Train_X, Train_Y)[1])
+		all_test_predictions.append(stumps[i].test_accuracy(Test_X, Test_Y)[1])
+	
+	bag_sizes = [5, 10, 15, 20, 25, 30]
+	train_bag_predictions = []
+	test_bag_predictions = []
+	for b in bag_sizes:
+		train_bag_predictions.append(voted_predict(all_train_predictions, b))
+		test_bag_predictions.append(voted_predict(all_test_predictions, b))
+	
+	train_bag_accuracy = []
+	test_bag_accuracy = []
+	for i in range(len(bag_sizes)):
+		train_bag_accuracy.append(calc_acc(train_bag_predictions[i], Train_Y))
+		test_bag_accuracy.append(calc_acc(test_bag_predictions[i], Test_Y))
+	
+	for i in range(len(bag_sizes)):
+		print ("%f\t%f" % (train_bag_accuracy[i], test_bag_accuracy[i]))
 	
 def stump_accuracy(Data, Labels, Column):
 	pass
@@ -250,8 +438,9 @@ def main():
 	print(len(Test_X))
 	print(len(Test_Y))
 
-	problem_1(Train_X, Train_Y, Test_X, Test_Y)
-	problem_2Bagging(Train_X, Train_Y, Test_X, Test_Y, size)
+	#problem_1(Train_X, Train_Y, Test_X, Test_Y)
+	#problem_2Bagging(Train_X, Train_Y, Test_X, Test_Y, size)
 
+	problem_2(Train_X, Train_Y, Test_X, Test_Y)
 if __name__ == "__main__":
 	main()
