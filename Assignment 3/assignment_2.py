@@ -52,6 +52,20 @@ def uncertainty(Data, Labels):
 		u = u - (one_portion * math.log(one_portion, 2))
 	return u
 
+def min_uncertainty(Data, Labels, Weights):
+	total_zero = 0.0;
+	total_one = 0.0
+	for i in range(len(Data)):
+		if (Labels[i] == 0):
+			total_zero += Weights[i]
+		else:
+			total_one += Weights[i]
+	
+	total_wieght =  total_zero + total_one
+	total_zero /= total_weight
+	total_one /= total_wieght
+	return min(total_zero, total_one)
+	
 def correct_num(Labels):
 	zero = 0
 	one = 0
@@ -83,7 +97,19 @@ def majority_label(Labels):
 	else:
 		return 0
 
+def majority_label_weighted(Labels, Weights):
+	zero = 0.0
+	one = 0.0
+	for l in range(len(Labels)):
+		if (Labels[l] == 0):
+			zero += Weights[l]
+		else:
+			one += Weights[l]
 
+	if (one >= zero):
+		return 1
+	else:
+		return 0
 
 class Stump:
 	def __init__(self):
@@ -160,6 +186,49 @@ class Stump:
 			
 			self.decision_column = Column
 	
+	def weighted_learn_stump(self, Data, Labels, Weights):
+		gain = []
+		learned_leaf_labels = []
+		for Column in range(len(Data[0])):
+			branch_zero = []
+			branch_zero_labels = []
+			branch_zero_weights = []
+
+			branch_one = []
+			branch_one_labels = []
+			brach_one_weights = []
+
+			for i in range(len(Data)):
+				if (Data[i][Column] == 0):
+					branch_zero.append(Data[i])
+					branch_zero_labels.append(Labels[i])
+					branch_zero_weights.append(Weights[i])
+				else:
+					branch_one.append(Data[i])
+					branch_one_labels.append(Labels[i])
+					branch_one_weights.append(Weights[i])
+
+			zero_portion = float(len(branch_zero)) / float(len(Data))
+			one_portion = 1 - zero_portion
+
+			zero_u = min_uncertainty(branch_zero, branch_zero_labels, branch_zero_weights)
+			one_u = min_uncertainty(branch_one, branch_one_labels, branch_zero_weights)
+			
+			info_gain = total_uncertainty - (zero_portion * zero_u) - (one_portion * one_u)
+
+			learned_labels = [0, 0]
+			learned_labels[0] = majority_label_weighted(branch_zero_labels, branch_zero_weights)
+			learned_labels[1] = majority_label_weighted(branch_one_labels, branch_one_weights)
+			
+			gain.append(info_gain)
+			learned_leaf_labels.append(learned_labels)
+		
+		self.learned_info_gain = max(gain)
+		self.decision_column = gain.index(self.learned_info_gain)
+		
+		self.leaf_labels[0] = learned_leaf_labels[self.decision_column][0]
+		self.leaf_labels[1] = learned_leaf_labels[self.decision_column][1]
+
 		
 	def test_accuracy(self, Data, Labels):
 		predicted_labels = []
