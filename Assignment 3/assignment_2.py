@@ -3,6 +3,8 @@ import csv
 import math
 import random
 import copy as cp
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 
@@ -390,36 +392,76 @@ def calc_acc(pred, label):
 	return correct / float(len(pred))
 	
 def problem_2(Train_X, Train_Y, Test_X, Test_Y):
-	Bootstrap_X, Bootstrap_Y = Better_Bootstrap(Train_X, Train_Y, 30)	
-	stumps = []
-	for i in range(30):
-		s = Stump()
-		s.learn_stump(Bootstrap_X[i], Bootstrap_Y[i])
-		stumps.append(s)
-		print(s.test_accuracy(Test_X, Test_Y)[0])
-
-	all_train_predictions = []
-	all_test_predictions = []
-	
-	for i in range(30):
-		all_train_predictions.append(stumps[i].test_accuracy(Train_X, Train_Y)[1])
-		all_test_predictions.append(stumps[i].test_accuracy(Test_X, Test_Y)[1])
-	
+	test_accuracies = []
+	train_accuracies = []
 	bag_sizes = [5, 10, 15, 20, 25, 30]
-	train_bag_predictions = []
-	test_bag_predictions = []
-	for b in bag_sizes:
-		train_bag_predictions.append(voted_predict(all_train_predictions, b))
-		test_bag_predictions.append(voted_predict(all_test_predictions, b))
+	for trial_run in range(10):
+		Bootstrap_X, Bootstrap_Y = Better_Bootstrap(Train_X, Train_Y, 30)	
+		stumps = []
+		for i in range(30):
+			s = Stump()
+			s.learn_stump(Bootstrap_X[i], Bootstrap_Y[i])
+			stumps.append(s)
+			print(s.test_accuracy(Test_X, Test_Y)[0])
+
+		all_train_predictions = []
+		all_test_predictions = []
 	
-	train_bag_accuracy = []
-	test_bag_accuracy = []
-	for i in range(len(bag_sizes)):
-		train_bag_accuracy.append(calc_acc(train_bag_predictions[i], Train_Y))
-		test_bag_accuracy.append(calc_acc(test_bag_predictions[i], Test_Y))
+		for i in range(30):
+			all_train_predictions.append(stumps[i].test_accuracy(Train_X, Train_Y)[1])
+			all_test_predictions.append(stumps[i].test_accuracy(Test_X, Test_Y)[1])
 	
-	for i in range(len(bag_sizes)):
-		print ("%f\t%f" % (train_bag_accuracy[i], test_bag_accuracy[i]))
+		bag_sizes = [5, 10, 15, 20, 25, 30]
+		train_bag_predictions = []
+		test_bag_predictions = []
+		for b in bag_sizes:
+			train_bag_predictions.append(voted_predict(all_train_predictions, b))
+			test_bag_predictions.append(voted_predict(all_test_predictions, b))
+	
+		train_bag_accuracy = []
+		test_bag_accuracy = []
+		for i in range(len(bag_sizes)):
+			train_bag_accuracy.append(calc_acc(train_bag_predictions[i], Train_Y))
+			test_bag_accuracy.append(calc_acc(test_bag_predictions[i], Test_Y))
+	
+		for i in range(len(bag_sizes)):
+			print ("%f\t%f" % (train_bag_accuracy[i], test_bag_accuracy[i]))
+		
+		test_accuracies.append(test_bag_accuracy)
+		train_accuracies.append(train_bag_accuracy)
+
+	average_train_accuracy = []
+	average_test_accuracy = []
+
+	for bag_num in range(len(test_accuracies[0])):
+		train_avg = 0.0
+		test_avg = 0.0		
+		for i in range(10):
+			train_avg += train_accuracies[i][bag_num]
+			test_avg += test_accuracies[i][bag_num]
+
+		average_train_accuracy.append(train_avg / 10.0)
+		average_test_accuracy.append(test_avg / 10.0)
+
+	for t in average_test_accuracy:
+		print(t)
+
+	for t in average_train_accuracy:
+		print(t)
+	
+	plt.plot(bag_sizes, average_train_accuracy, label='Train Accuracy')
+	plt.plot(bag_sizes, average_test_accuracy, label='Test Accuracy')
+	plt.legend(loc='best')
+	plt.xlabel("Number of Decision Stumps")
+	plt.ylabel("Accuracy")
+	plt.title("Accuracy of Bagged Decision Stumps")
+	
+	plt.savefig("problem_2_plot.png")
+	plt.show()
+	
+
+
+		
 	
 def stump_accuracy(Data, Labels, Column):
 	pass
