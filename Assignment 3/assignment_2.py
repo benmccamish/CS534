@@ -61,9 +61,9 @@ def min_uncertainty(Data, Labels, Weights):
 		else:
 			total_one += Weights[i]
 	
-	total_wieght =  total_zero + total_one
+	total_weight =  total_zero + total_one
 	total_zero /= total_weight
-	total_one /= total_wieght
+	total_one /= total_weight
 	return min(total_zero, total_one)
 	
 def correct_num(Labels):
@@ -158,6 +158,7 @@ class Stump:
 			
 			self.leaf_labels[0] = learned_leaf_labels[self.decision_column][0]
 			self.leaf_labels[1] = learned_leaf_labels[self.decision_column][1]
+
 		else:
 			branch_zero = []
 			branch_zero_labels = []
@@ -189,6 +190,7 @@ class Stump:
 	def weighted_learn_stump(self, Data, Labels, Weights):
 		gain = []
 		learned_leaf_labels = []
+		total_uncertainty = uncertainty(Data, Labels)
 		for Column in range(len(Data[0])):
 			branch_zero = []
 			branch_zero_labels = []
@@ -196,7 +198,7 @@ class Stump:
 
 			branch_one = []
 			branch_one_labels = []
-			brach_one_weights = []
+			branch_one_weights = []
 
 			for i in range(len(Data)):
 				if (Data[i][Column] == 0):
@@ -244,11 +246,6 @@ class Stump:
 					correct += 1
 		acc = correct / float(len(Labels))
 		return acc, predicted_labels
-
-
-
-
-
 
 
 #Added outputs zero_correct, label_zero, one_correct, label_one.  zero_correct, label_zero infers the feature is 0 and the label is the maximum correct targets in it.#
@@ -331,7 +328,7 @@ def Better_Bootstrap(Train_X, Train_Y, size):
 		Boot_StrapsX.append(SampleX)
 		Boot_StrapsY.append(SampleY)
 	return Boot_StrapsX, Boot_StrapsY	
-	
+
 def Correct_Stump(Train_DataX, Train_DataY, Test_X, Test_Y):	
 	Gains = []
 	Target_Guess = []
@@ -528,6 +525,80 @@ def problem_2(Train_X, Train_Y, Test_X, Test_Y):
 	plt.savefig("problem_2_plot.png")
 	plt.show()
 	
+def problem_3(Train_X, Train_Y, Test_X, Test_Y, numBags):
+	test_accuracies = []
+	train_accuracies = []
+	bag_sizes = [5, 10, 15, 20, 25, 30]
+
+	D = [float(1/len(Train_X)) for i in xrange(0,len(Train_X))]
+
+	hTrain = []
+	hTest = []
+	errorTest = 1
+	errorTrain = 1
+	alpha = 1
+
+	#Create Stumps
+	stumps = []
+	for i in range(numBags):
+		s = Stump()
+		s.weighted_learn_stump(Train_X, Train_Y, D)
+		stumps.append(s)
+
+	all_train_predictions = []
+	all_test_predictions = []
+	for i in range(numBags):
+			all_train_predictions.append(stumps[i].test_accuracy(Train_X, Train_Y)[1])
+			all_test_predictions.append(stumps[i].test_accuracy(Test_X, Test_Y)[1])
+
+	#Hypothesis
+	hTrain = voted_predict(all_train_predictions, numBags)
+	hTest = voted_predict(all_test_predictions, numBags)
+
+	#Error
+	errorTrain = 1 - calc_acc(hTrain, Train_Y)
+	errorTest = 1 - calc_acc(hTest, Test_Y)
+	
+	#Alpha
+	alpha = 0.5*math.log((1-errorTrain)/errorTrain)
+
+	#Changing Weights
+	for i in range(len(D)):
+		if(Train_Y[i] == hTrain[i]):
+			D[i] * math.exp(-alpha)
+		else:
+			D[i] * math.exp(alpha)
+
+		
+	for iterations in xrange(0,50):
+		for s in stumps:
+			s.weighted_learn_stump(Train_X, Train_Y, D)
+		
+		all_train_predictions = []
+		all_test_predictions = []
+		for i in range(numBags):
+				all_train_predictions.append(stumps[i].test_accuracy(Train_X, Train_Y)[1])
+				all_test_predictions.append(stumps[i].test_accuracy(Test_X, Test_Y)[1])
+
+		#Hypothesis
+		hTrain = voted_predict(all_train_predictions, numBags)
+		hTest = voted_predict(all_test_predictions, numBags)
+
+		#Error
+		errorTrain = 1 - calc_acc(hTrain, Train_Y)
+		errorTest = 1 - calc_acc(hTest, Test_Y)
+		
+		#Alpha
+		alpha = 0.5*math.log((1-errorTrain)/errorTrain)
+
+		#Changing Weights
+		for i in range(len(D)):
+			if(Train_Y[i] == hTrain[i]):
+				D[i] = D[i] * math.exp(-alpha)
+			else:
+				D[i] = D[i] * math.exp(alpha)
+
+		print(errorTrain)
 
 
 		
@@ -552,6 +623,7 @@ def main():
 	#problem_1(Train_X, Train_Y, Test_X, Test_Y)
 	#problem_2Bagging(Train_X, Train_Y, Test_X, Test_Y, size)
 
-	problem_2(Train_X, Train_Y, Test_X, Test_Y)
+	#problem_2(Train_X, Train_Y, Test_X, Test_Y)
+	problem_3(Train_X, Train_Y, Test_X, Test_Y, 30)
 if __name__ == "__main__":
 	main()
