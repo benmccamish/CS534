@@ -624,6 +624,6 @@ def main():
 	#problem_2Bagging(Train_X, Train_Y, Test_X, Test_Y, size)
 
 	#problem_2(Train_X, Train_Y, Test_X, Test_Y)
-	problem_3(Train_X, Train_Y, Test_X, Test_Y, 30)
+	problem_3(Train_X, Train_Y, Test_X, Test_Y, 5)
 if __name__ == "__main__":
 	main()
