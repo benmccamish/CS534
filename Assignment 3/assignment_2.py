@@ -564,6 +564,7 @@ def problem_3(Train_X, Train_Y, Test_X, Test_Y, numBags):
 	test_accuracies = []
 	train_accuracies = []
 	errorOverIterations = []
+	errorOverIterationsTest = []
 	iterationCount = []
 	bag_sizes = [5, 10, 15, 20, 25, 30]
 
@@ -584,22 +585,22 @@ def problem_3(Train_X, Train_Y, Test_X, Test_Y, numBags):
 		s = Stump()
 		s.weighted_learn_stump(Train_X, Train_Y, weightsTrain)
 		stumps.append(s)
+		print(s.test_accuracy(Train_X, Train_Y)[0])
 
 	all_train_predictions = []
 	all_test_predictions = []
 	for i in range(numBags):
 			all_train_predictions.append(stumps[i].test_accuracy(Train_X, Train_Y)[1])
-			#all_test_predictions.append(stumps[i].test_accuracy(Test_X, Test_Y)[1])
+			all_test_predictions.append(stumps[i].test_accuracy(Test_X, Test_Y)[1])
 
 	#Hypothesis
 	hTrain = voted_predict(all_train_predictions, numBags)
-	#hTest = voted_predict(all_test_predictions, numBags)
+	hTest = voted_predict(all_test_predictions, numBags)
 
 	#Error
-	#errorTrain = calc_acc(hTrain, Train_Y)
+	errorTest = 1-calc_err_weighted(hTrain, Train_Y, weightsTest)
 	errorTrain = 1-calc_err_weighted(hTrain, Train_Y, weightsTrain)
 
-	#errorTest = 1 - calc_acc_weighted(hTest, Test_Y, D)
 	print errorTrain
 	#Alpha
 	alpha = 0.5*math.log((1-errorTrain)/(errorTrain+0.000001))
@@ -607,16 +608,27 @@ def problem_3(Train_X, Train_Y, Test_X, Test_Y, numBags):
 	#Changing Weights
 	for i in range(len(weightsTrain)):
 		if(Train_Y[i] == hTrain[i]):
-			weightsTrain[i] * math.exp(-alpha)
+			weightsTrain[i] = weightsTrain[i] * math.exp(alpha)
 		else:
-			weightsTrain[i] * math.exp(alpha)
+			weightsTrain[i] = weightsTrain[i] * math.exp(-alpha)
+		
+		if(Test_Y[i] == hTest[i]):
+			weightsTest[i] = weightsTest[i] * math.exp(alpha)
+		else:
+			weightsTest[i] = weightsTest[i] * math.exp(-alpha)
+
+		
+	for i in range(len(weightsTest)):
+		weightsTest[i] /= sum(weightsTest)
 	
 	for i in range(len(weightsTrain)):
 		weightsTrain[i] /= sum(weightsTrain)
 	
 	errorOverIterations.append(errorTrain)
+	errorOverIterationsTest.append(errorTest)
 	iterationCount.append(0)
-	for iterations in xrange(0,100):
+
+	for iterations in xrange(0,10):
 		iterationCount.append(iterations+1)
 		stumps = []
 		for i in range(numBags):
@@ -625,39 +637,50 @@ def problem_3(Train_X, Train_Y, Test_X, Test_Y, numBags):
 			stumps.append(s)
 		
 		all_train_predictions = []
-		#all_test_predictions = []
+		all_test_predictions = []
 		for i in range(numBags):
 				all_train_predictions.append(stumps[i].test_accuracy(Train_X, Train_Y)[1])
-				#all_test_predictions.append(stumps[i].test_accuracy(Test_X, Test_Y)[1])
+				all_test_predictions.append(stumps[i].test_accuracy(Test_X, Test_Y)[1])
 
 		#Hypothesis
 		hTrain = voted_predict(all_train_predictions, numBags)
-		#hTest = voted_predict(all_test_predictions, numBags)
+		hTest = voted_predict(all_test_predictions, numBags)
 
 		#Error
 		#errorTrain = calc_acc(hTrain, Train_Y)
 		errorTrain = 1-calc_err_weighted(hTrain, Train_Y, weightsTrain)
-		#errorTest = 1 - calc_acc_weighted(hTest, Test_Y, D)
-		print errorTrain
+		errorTest = 1 - calc_err_weighted(hTest, Test_Y, weightsTest)
+
 		#Alpha
 		alpha = 0.5*math.log((1-errorTrain)/(errorTrain+0.000001))
 
 		#Changing Weights
 		for i in range(len(weightsTrain)):
 			if(Train_Y[i] == hTrain[i]):
-				weightsTrain[i] = weightsTrain[i] * math.exp(-alpha)
-			else:
 				weightsTrain[i] = weightsTrain[i] * math.exp(alpha)
+			else:
+				weightsTrain[i] = weightsTrain[i] * math.exp(-alpha)
+
+			if(Test_Y[i] == hTest[i]):
+				weightsTest[i] = weightsTest[i] * math.exp(alpha)
+			else:
+				weightsTest[i] = weightsTest[i] * math.exp(-alpha)
+
+		
+		for i in range(len(weightsTest)):
+			weightsTest[i] /= sum(weightsTest)
 
 		for i in range(len(weightsTrain)):
 			weightsTrain[i] /= sum(weightsTrain)
 
 		#print weightsTrain[0]
 		print (errorTrain), alpha
+		print errorTest, alpha
 		errorOverIterations.append(errorTrain)
+		errorOverIterationsTest.append(errorTest)
 
 	plt.plot(iterationCount, errorOverIterations, label='Train Error')
-	#plt.plot(bag_sizes, average_test_accuracy, label='Test Accuracy')
+	plt.plot(iterationCount, errorOverIterationsTest, label='Test Accuracy')
 	plt.legend(loc='best')
 	plt.xlabel("Number of Iterations")
 	plt.ylabel("Error")
