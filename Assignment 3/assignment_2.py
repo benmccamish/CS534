@@ -52,6 +52,23 @@ def uncertainty(Data, Labels):
 		u = u - (one_portion * math.log(one_portion, 2))
 	return u
 
+def weighted_uncertainty(Data, Labels, Weights):
+	total_zero = 0.0;
+	for i in range(len(Data)):
+		if (Labels[i] == 0):
+			total_zero += 1
+	zero_portion = 0.0
+	if (len(Data)):
+		zero_portion = total_zero /  float(len(Data))
+	
+	one_portion = 1 - zero_portion
+	u = 0
+	if (zero_portion != 0):
+		u = u -(zero_portion * math.log(zero_portion, 2))
+	if (one_portion != 0):
+		u = u - (one_portion * math.log(one_portion, 2))
+	return u
+
 def min_uncertainty(Data, Labels, Weights):
 	total_zero = 0.0;
 	total_one = 0.0
@@ -190,7 +207,8 @@ class Stump:
 	def weighted_learn_stump(self, Data, Labels, Weights):
 		gain = []
 		learned_leaf_labels = []
-		total_uncertainty = uncertainty(Data, Labels)
+		total_uncertainty = min_uncertainty(Data, Labels, Weights)
+		
 		for Column in range(len(Data[0])):
 			branch_zero = []
 			branch_zero_labels = []
@@ -214,7 +232,7 @@ class Stump:
 			one_portion = 1 - zero_portion
 
 			zero_u = min_uncertainty(branch_zero, branch_zero_labels, branch_zero_weights)
-			one_u = min_uncertainty(branch_one, branch_one_labels, branch_zero_weights)
+			one_u = min_uncertainty(branch_one, branch_one_labels, branch_one_weights)
 			
 			info_gain = total_uncertainty - (zero_portion * zero_u) - (one_portion * one_u)
 
@@ -449,6 +467,14 @@ def voted_predict(predictions, size):
 	
 	return voted_guess
 
+def calc_err_weighted(pred, label, weights):
+	correct = 0.0
+	#print len(weights), len(pred), len(label)
+	for i in range(len(pred)):
+		correct += weights[i]*abs(label[i]-pred[i])
+	
+	return correct/float(sum(weights))
+
 def calc_acc(pred, label):
 	correct = 0.0
 	for i in range(len(pred)):
@@ -528,10 +554,15 @@ def problem_2(Train_X, Train_Y, Test_X, Test_Y):
 def problem_3(Train_X, Train_Y, Test_X, Test_Y, numBags):
 	test_accuracies = []
 	train_accuracies = []
+	errorOverIterations = []
+	iterationCount = []
 	bag_sizes = [5, 10, 15, 20, 25, 30]
 
-	D = [float(1/len(Train_X)) for i in xrange(0,len(Train_X))]
-
+	#D = [(float(1)/len(Train_Y)) for i in range(len(Train_Y))]
+	weightsTrain = [(float(1)/len(Train_Y)) for i in range(len(Train_Y))]
+	weightsTest = [(float(1)/len(Train_Y)) for i in range(len(Test_Y))]
+	
+	print len(weightsTrain)
 	hTrain = []
 	hTest = []
 	errorTest = 1
@@ -542,63 +573,86 @@ def problem_3(Train_X, Train_Y, Test_X, Test_Y, numBags):
 	stumps = []
 	for i in range(numBags):
 		s = Stump()
-		s.weighted_learn_stump(Train_X, Train_Y, D)
+		s.weighted_learn_stump(Train_X, Train_Y, weightsTrain)
 		stumps.append(s)
 
 	all_train_predictions = []
 	all_test_predictions = []
 	for i in range(numBags):
 			all_train_predictions.append(stumps[i].test_accuracy(Train_X, Train_Y)[1])
-			all_test_predictions.append(stumps[i].test_accuracy(Test_X, Test_Y)[1])
+			#all_test_predictions.append(stumps[i].test_accuracy(Test_X, Test_Y)[1])
 
 	#Hypothesis
 	hTrain = voted_predict(all_train_predictions, numBags)
-	hTest = voted_predict(all_test_predictions, numBags)
+	#hTest = voted_predict(all_test_predictions, numBags)
 
 	#Error
-	errorTrain = 1 - calc_acc(hTrain, Train_Y)
-	errorTest = 1 - calc_acc(hTest, Test_Y)
+	#errorTrain = calc_acc(hTrain, Train_Y)
+	errorTrain = calc_err_weighted(hTrain, Train_Y, weightsTrain)
+
+	#errorTest = 1 - calc_acc_weighted(hTest, Test_Y, D)
 	
 	#Alpha
 	alpha = 0.5*math.log((1-errorTrain)/errorTrain)
 
 	#Changing Weights
-	for i in range(len(D)):
+	for i in range(len(weightsTrain)):
 		if(Train_Y[i] == hTrain[i]):
-			D[i] * math.exp(-alpha)
+			weightsTrain[i] * math.exp(-alpha)
 		else:
-			D[i] * math.exp(alpha)
-
-		
-	for iterations in xrange(0,50):
-		for s in stumps:
-			s.weighted_learn_stump(Train_X, Train_Y, D)
+			weightsTrain[i] * math.exp(alpha)
+		weightsTrain[i] /= sum(weightsTrain)
+	
+	errorOverIterations.append(errorTrain)
+	iterationCount.append(0)
+	for iterations in xrange(0,100):
+		iterationCount.append(iterations+1)
+		stumps = []
+		for i in range(numBags):
+			s = Stump()
+			s.weighted_learn_stump(Train_X, Train_Y, weightsTrain)
+			stumps.append(s)
 		
 		all_train_predictions = []
-		all_test_predictions = []
+		#all_test_predictions = []
 		for i in range(numBags):
 				all_train_predictions.append(stumps[i].test_accuracy(Train_X, Train_Y)[1])
-				all_test_predictions.append(stumps[i].test_accuracy(Test_X, Test_Y)[1])
+				#all_test_predictions.append(stumps[i].test_accuracy(Test_X, Test_Y)[1])
 
 		#Hypothesis
 		hTrain = voted_predict(all_train_predictions, numBags)
-		hTest = voted_predict(all_test_predictions, numBags)
+		#hTest = voted_predict(all_test_predictions, numBags)
 
 		#Error
-		errorTrain = 1 - calc_acc(hTrain, Train_Y)
-		errorTest = 1 - calc_acc(hTest, Test_Y)
+		#errorTrain = calc_acc(hTrain, Train_Y)
+		errorTrain = calc_err_weighted(hTrain, Train_Y, weightsTrain)
+		#errorTest = 1 - calc_acc_weighted(hTest, Test_Y, D)
 		
 		#Alpha
 		alpha = 0.5*math.log((1-errorTrain)/errorTrain)
 
 		#Changing Weights
-		for i in range(len(D)):
+		for i in range(len(weightsTrain)):
 			if(Train_Y[i] == hTrain[i]):
-				D[i] = D[i] * math.exp(-alpha)
+				weightsTrain[i] = weightsTrain[i] * math.exp(-alpha)
 			else:
-				D[i] = D[i] * math.exp(alpha)
+				weightsTrain[i] = weightsTrain[i] * math.exp(alpha)
 
-		print(errorTrain)
+			weightsTrain[i] /= sum(weightsTrain)
+
+		#print weightsTrain[0]
+		print (errorTrain), alpha
+		errorOverIterations.append(errorTrain)
+
+	plt.plot(iterationCount, errorOverIterations, label='Train Error')
+	#plt.plot(bag_sizes, average_test_accuracy, label='Test Accuracy')
+	plt.legend(loc='best')
+	plt.xlabel("Number of Iterations")
+	plt.ylabel("Error")
+	plt.title("Accuracy of AdaBoosting")
+	
+	plt.savefig("problem_3_plot.png")
+	plt.show()
 
 
 		
@@ -615,7 +669,6 @@ def main():
 	Train_X, Train_Y, Test_X, Test_Y = read_csv_data("SPECT-train.csv", "SPECT-test.csv")
 	
 	print(len(Train_X))
-	
 	print(len(Train_Y))
 	print(len(Test_X))
 	print(len(Test_Y))
@@ -624,6 +677,6 @@ def main():
 	#problem_2Bagging(Train_X, Train_Y, Test_X, Test_Y, size)
 
 	#problem_2(Train_X, Train_Y, Test_X, Test_Y)
-	problem_3(Train_X, Train_Y, Test_X, Test_Y, 5)
+	problem_3(Train_X, Train_Y, Test_X, Test_Y, 30)
 if __name__ == "__main__":
 	main()
