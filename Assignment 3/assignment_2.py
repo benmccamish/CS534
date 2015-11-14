@@ -468,12 +468,21 @@ def voted_predict(predictions, size):
 	return voted_guess
 
 def calc_err_weighted(pred, label, weights):
-	correct = 0.0
-	#print len(weights), len(pred), len(label)
-	for i in range(len(pred)):
-		correct += weights[i]*abs(label[i]-pred[i])
+	# correct = 0.0
+	# #print len(weights), len(pred), len(label)
+	# for i in range(len(pred)):
+	# 	correct += weights[i]*float(abs(label[i]-pred[i]))
 	
-	return correct/float(sum(weights))
+	# return correct
+	
+
+	correct = 0.0
+	for i in range(len(pred)):
+		if (pred[i] == label[i]):
+			correct += float(1)*weights[i]
+	
+	return correct/sum(weights)
+
 
 def calc_acc(pred, label):
 	correct = 0.0
@@ -560,7 +569,7 @@ def problem_3(Train_X, Train_Y, Test_X, Test_Y, numBags):
 
 	#D = [(float(1)/len(Train_Y)) for i in range(len(Train_Y))]
 	weightsTrain = [(float(1)/len(Train_Y)) for i in range(len(Train_Y))]
-	weightsTest = [(float(1)/len(Train_Y)) for i in range(len(Test_Y))]
+	weightsTest = [(float(1)/len(Test_Y)) for i in range(len(Test_Y))]
 	
 	print len(weightsTrain)
 	hTrain = []
@@ -588,12 +597,12 @@ def problem_3(Train_X, Train_Y, Test_X, Test_Y, numBags):
 
 	#Error
 	#errorTrain = calc_acc(hTrain, Train_Y)
-	errorTrain = calc_err_weighted(hTrain, Train_Y, weightsTrain)
+	errorTrain = 1-calc_err_weighted(hTrain, Train_Y, weightsTrain)
 
 	#errorTest = 1 - calc_acc_weighted(hTest, Test_Y, D)
-	
+	print errorTrain
 	#Alpha
-	alpha = 0.5*math.log((1-errorTrain)/errorTrain)
+	alpha = 0.5*math.log((1-errorTrain)/(errorTrain+0.000001))
 
 	#Changing Weights
 	for i in range(len(weightsTrain)):
@@ -601,6 +610,8 @@ def problem_3(Train_X, Train_Y, Test_X, Test_Y, numBags):
 			weightsTrain[i] * math.exp(-alpha)
 		else:
 			weightsTrain[i] * math.exp(alpha)
+	
+	for i in range(len(weightsTrain)):
 		weightsTrain[i] /= sum(weightsTrain)
 	
 	errorOverIterations.append(errorTrain)
@@ -625,11 +636,11 @@ def problem_3(Train_X, Train_Y, Test_X, Test_Y, numBags):
 
 		#Error
 		#errorTrain = calc_acc(hTrain, Train_Y)
-		errorTrain = calc_err_weighted(hTrain, Train_Y, weightsTrain)
+		errorTrain = 1-calc_err_weighted(hTrain, Train_Y, weightsTrain)
 		#errorTest = 1 - calc_acc_weighted(hTest, Test_Y, D)
-		
+		print errorTrain
 		#Alpha
-		alpha = 0.5*math.log((1-errorTrain)/errorTrain)
+		alpha = 0.5*math.log((1-errorTrain)/(errorTrain+0.000001))
 
 		#Changing Weights
 		for i in range(len(weightsTrain)):
@@ -638,6 +649,7 @@ def problem_3(Train_X, Train_Y, Test_X, Test_Y, numBags):
 			else:
 				weightsTrain[i] = weightsTrain[i] * math.exp(alpha)
 
+		for i in range(len(weightsTrain)):
 			weightsTrain[i] /= sum(weightsTrain)
 
 		#print weightsTrain[0]
@@ -677,6 +689,6 @@ def main():
 	#problem_2Bagging(Train_X, Train_Y, Test_X, Test_Y, size)
 
 	#problem_2(Train_X, Train_Y, Test_X, Test_Y)
-	problem_3(Train_X, Train_Y, Test_X, Test_Y, 30)
+	problem_3(Train_X, Train_Y, Test_X, Test_Y, 1)
 if __name__ == "__main__":
 	main()
