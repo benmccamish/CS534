@@ -680,7 +680,7 @@ def problem_3(Train_X, Train_Y, Test_X, Test_Y, numBags):
 		errorOverIterationsTest.append(errorTest)
 
 	plt.plot(iterationCount, errorOverIterations, label='Train Error')
-	plt.plot(iterationCount, errorOverIterationsTest, label='Test Accuracy')
+	plt.plot(iterationCount, errorOverIterationsTest, label='Test Error')
 	plt.legend(loc='best')
 	plt.xlabel("Number of Iterations")
 	plt.ylabel("Error")
