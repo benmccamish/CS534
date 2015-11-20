@@ -17,10 +17,10 @@ cmd:option('-seed', 1, 'initial random seed')
 cmd:option('-threads', 2, 'threads')
 
 -- for all models:
-cmd:option('-model', 'conv-psd', 'auto-encoder class: linear | linear-psd | conv | conv-psd')
-cmd:option('-inputsize', 25, 'size of each input patch')
+cmd:option('-model', 'conv', 'auto-encoder class: linear | linear-psd | conv | conv-psd')
+cmd:option('-inputsize', 56, 'size of each input patch')
 cmd:option('-nfiltersin', 1, 'number of input convolutional filters')
-cmd:option('-nfiltersout', 16, 'number of output convolutional filters')
+cmd:option('-nfiltersout', 120, 'number of output convolutional filters')
 cmd:option('-lambda', 1, 'sparsity coefficient')
 cmd:option('-beta', 1, 'prediction error coefficient')
 cmd:option('-eta', 2e-3, 'learning rate')
@@ -41,7 +41,7 @@ cmd:option('-kernelsize', 9, 'size of convolutional kernels')
 
 -- logging:
 cmd:option('-datafile', 'http://torch7.s3-website-us-east-1.amazonaws.com/data/tr-berkeley-N5K-M56x56-lcn.ascii', 'Dataset URL')
-cmd:option('-statinterval', 5000, 'interval for saving stats and models')
+cmd:option('-statinterval', 10000, 'interval for saving stats and models')
 cmd:option('-v', false, 'be verbose')
 cmd:option('-display', false, 'display stuff')
 cmd:option('-wcar', '', 'additional flag to differentiate this run')
@@ -65,16 +65,19 @@ torch.setnumthreads(params.threads)
 
 ----------------------------------------------------------------------
 -- load data
---
 filename = paths.basename(params.datafile)
 if not paths.filep(filename) then
    os.execute('wget ' .. params.datafile .. '; '.. 'tar xvf ' .. filename)
 end
-dataset = getdata(filename, params.inputsize)
+--dataset = getdata(filename, params.inputsize)
 
+dataset = getfootballdata('/scratch/tfiez/torch_test/CS534/torch_test/autoencoder_test/video_frames/', 1, 100)
+print("Got data!")
+--dissplayData(dataset, 1, 1, 2)
 if params.display then
    displayData(dataset, 100, 10, 2)
 end
+
 
 ----------------------------------------------------------------------
 -- create model
@@ -327,7 +330,11 @@ for t = 1,params.maxiter,params.batchsize do
 
       -- report
       print('==> iteration = ' .. t .. ', average loss = ' .. err/params.statinterval)
-
+      local sample = dataset[1]
+      print(sample[1]:size())
+      print(dataset:size())
+      print(sample[1][1]:size())
+      print(sample[3]:size())
       -- get weights
       eweight = module.encoder.modules[1].weight
       if module.decoder.D then
@@ -351,19 +358,42 @@ for t = 1,params.maxiter,params.batchsize do
                                  padding=2,
                                  nrow=math.floor(math.sqrt(params.nfiltersout)),
                                  symmetric=true}
-
+      
+      --[[my_output = '/scratch/tfiez/torch_test/CS534/torch_test/autoencoder_test/auto_output/'
+      os.execute('mkdir -p ' .. my_output)
+      module.encoder:updateOutput(dataset[1][1])
+      local o = module.encoder.output
+      module.decoder:updateOutput(o)
+      image.save(my_output .. 'test.png', dataset[1][3])
+      image.save(my_output .. 'test_output.png', module.decoder.output)
+      --]]
       -- live display
+      
+      my_output = '/scratch/tfiez/torch_test/CS534/torch_test/autoencoder_test/auto_output/'
+      os.execute('mkdir -p ' .. my_output)
+      print(dataset:size())
+      for i = 1,dataset:size() do
+      
+          module.encoder:updateOutput(dataset[i][1])
+          module.decoder:updateOutput(module.encoder.output)
+          image.save(my_output .. i .. '.png', dataset[i][1])
+          image.save(my_output .. i .. '_reconstructed.png', module.decoder.output)
+          
+      end
+      
+      ---[[
       if params.display then
          _win1_ = image.display{image=dd, win=_win1_, legend='Decoder filters', zoom=2}
          _win2_ = image.display{image=de, win=_win2_, legend='Encoder filters', zoom=2}
       end
 
       -- save stuff
-      image.save(params.rundir .. '/filters_dec_' .. t .. '.jpg', dd)
-      image.save(params.rundir .. '/filters_enc_' .. t .. '.jpg', de)
+      image.save(params.rundir .. '/filters_dec_' .. t .. '.png', dd)
+      image.save(params.rundir .. '/filters_enc_' .. t .. '.png', de)
       torch.save(params.rundir .. '/model_' .. t .. '.bin', module)
 
       -- reset counters
       err = 0; iter = 0
    end
 end
+
