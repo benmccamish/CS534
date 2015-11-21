@@ -61,9 +61,11 @@ function getfootballdata(directory, video_num, frame_num)
 	local total_size = video_num * frame_num
 	
 	local files = {}
-
+   local test = paths.files(directory)
+   print(test.next())
 -- Go over all files in directory. We use an iterator, paths.files().
 	for file in paths.files(directory) do
+      print("****" .. file)
    -- We only load files that match the extension
    		if file:find('.png' .. '$') then
       -- and insert the ones we care about in our table
@@ -168,7 +170,7 @@ function getfootballdata(directory, video_num, frame_num)
 	function dataset:prepImage()
      		print(#images)
      		print(cur_frame)
-     		--print(images[1])
+     		print(images[1])
      		--image.display(image.toDisplayTensor(images[cur_frame]))
       		local imgray = image.rgb2y(images[cur_frame])
       		

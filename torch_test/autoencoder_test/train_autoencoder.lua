@@ -71,7 +71,7 @@ if not paths.filep(filename) then
 end
 --dataset = getdata(filename, params.inputsize)
 
-dataset = getfootballdata('/scratch/tfiez/torch_test/CS534/torch_test/autoencoder_test/video_frames/', 1, 100)
+dataset = getfootballdata('~/video_frames/', 1, 100)
 print("Got data!")
 --dissplayData(dataset, 1, 1, 2)
 if params.display then
@@ -105,7 +105,7 @@ if params.model == 'linear' then
    print('==> constructed linear auto-encoder')
 
 elseif params.model == 'conv' then
-
+   print('Starting Conv')
    -- params:
    conntable = nn.tables.full(params.nfiltersin, params.nfiltersout)
    kw, kh = params.kernelsize, params.kernelsize
@@ -231,18 +231,23 @@ for t = 1,params.maxiter,params.batchsize do
 
       print('==> estimating diagonal hessian elements')
       for i = 1,hessiansamples do
+         print("Blah")
          -- next
+
+         print (dataset[0])
          local ex = dataset[i]
          local input = ex[1]
          local target = ex[2]
          module:updateOutput(input, target)
 
          -- gradient
+         print("Gradient")
          dl_dx:zero()
          module:updateGradInput(input, target)
          module:accGradParameters(input, target)
 
          -- hessian
+         print("Hessian")
          ddl_ddx:zero()
          module:updateDiagHessianInput(input, target)
          module:accDiagHessianParameters(input, target)
