@@ -71,7 +71,7 @@ if not paths.filep(filename) then
 end
 --dataset = getdata(filename, params.inputsize)
 
-dataset = getfootballdata('~/video_frames/', 1, 100)
+dataset = getfootballdata('/Users/benmccamish/video_frames/', 1, 100)
 print("Got data!")
 --dissplayData(dataset, 1, 1, 2)
 if params.display then

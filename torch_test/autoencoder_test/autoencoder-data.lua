@@ -61,8 +61,8 @@ function getfootballdata(directory, video_num, frame_num)
 	local total_size = video_num * frame_num
 	
 	local files = {}
-   local test = paths.files(directory)
-   print(test.next())
+   --local test = paths.files(directory)
+   --print(test.next())
 -- Go over all files in directory. We use an iterator, paths.files().
 	for file in paths.files(directory) do
       print("****" .. file)
