@@ -31,8 +31,8 @@ cmd:option('-maxiter', 1000000, 'max number of updates')
 
 -- use hessian information for training:
 cmd:option('-hessian', true, 'compute diagonal hessian coefficients to condition learning rates')
-cmd:option('-hessiansamples', 500, 'number of samples to use to estimate hessian')
-cmd:option('-hessianinterval', 10000, 'compute diagonal hessian coefs at every this many samples')
+cmd:option('-hessiansamples', 100, 'number of samples to use to estimate hessian')
+cmd:option('-hessianinterval', 100, 'compute diagonal hessian coefs at every this many samples')
 cmd:option('-minhessian', 0.02, 'min hessian to avoid extreme speed up')
 cmd:option('-maxhessian', 500, 'max hessian to avoid extreme slow down')
 
@@ -41,7 +41,7 @@ cmd:option('-kernelsize', 9, 'size of convolutional kernels')
 
 -- logging:
 cmd:option('-datafile', 'http://torch7.s3-website-us-east-1.amazonaws.com/data/tr-berkeley-N5K-M56x56-lcn.ascii', 'Dataset URL')
-cmd:option('-statinterval', 10000, 'interval for saving stats and models')
+cmd:option('-statinterval', 200, 'interval for saving stats and models')
 cmd:option('-v', false, 'be verbose')
 cmd:option('-display', false, 'display stuff')
 cmd:option('-wcar', '', 'additional flag to differentiate this run')
@@ -71,7 +71,7 @@ if not paths.filep(filename) then
 end
 --dataset = getdata(filename, params.inputsize)
 
-dataset = getfootballdata('/scratch/tfiez/torch_test/CS534/torch_test/autoencoder_test/video_frames/', 1, 100)
+dataset = getfootballdata('/scratch/tfiez/torch_test/CS534/torch_test/autoencoder_test/video_frames/', 1, 110)
 print("Got data!")
 --dissplayData(dataset, 1, 1, 2)
 if params.display then
@@ -232,7 +232,12 @@ for t = 1,params.maxiter,params.batchsize do
       print('==> estimating diagonal hessian elements')
       for i = 1,hessiansamples do
          -- next
+
+         if (i > 100) then
+         	break
+         end
          local ex = dataset[i]
+         print("Got the data")
          local input = ex[1]
          local target = ex[2]
          module:updateOutput(input, target)
@@ -375,9 +380,11 @@ for t = 1,params.maxiter,params.batchsize do
       for i = 1,dataset:size() do
       
           module.encoder:updateOutput(dataset[i][1])
+          print(module.encoder.output:size())
           module.decoder:updateOutput(module.encoder.output)
           image.save(my_output .. i .. '.png', dataset[i][1])
           image.save(my_output .. i .. '_reconstructed.png', module.decoder.output)
+          image.save(my_output .. i .. '_real.png', dataset[i][3])
           
       end
       

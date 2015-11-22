@@ -165,32 +165,37 @@ function getfootballdata(directory, video_num, frame_num)
 		return nim
 	end
 	
-	function dataset:prepImage()
-     		print(#images)
-     		print(cur_frame)
+	local width = 120
+	local height = 68
+	
+	function dataset:prepImage(my_index)
      		--print(images[1])
      		--image.display(image.toDisplayTensor(images[cur_frame]))
-      		local imgray = image.rgb2y(images[cur_frame])
+     		
+      		local imgray = image.rgb2y(images[my_index])
       		
+      		imgray = image.scale(imgray, 120, 68)
+      		
+      		--image.display(image.toDisplayTensor(imgray))
       		--print(imgray.size())
       		cur_frame = cur_frame + 1
 
       		local nim = lcn(imgray[1]:clone())
-      		print(nim:size())
-      		local patch = nim:narrow(1,1,536)
-         	patch = patch:narrow(2,1,956)
-     		print(imgray:size())
-            	return imgray[1]:clone(), i, imgray[1]
+      		local patch = nim:narrow(1,1,64)
+         	patch = patch:narrow(2,1,116)
+            	return patch, i, imgray[1]
         end
         
-        local dsample = torch.Tensor(540, 960)
+        
+        local dsample = torch.Tensor(64, 116)
         
         function dataset:conv()
-		dsample = torch.Tensor(1,540,960)
+		dsample = torch.Tensor(1,64,116)
    	end
         
         setmetatable(dataset, {__index = function(self, index)
-                                       local sample, i, im = self:prepImage()
+       				       my_index = 1 + (index % (video_num*frame_num))
+                                       local sample, i, im = self:prepImage(my_index)
                                        dsample:copy(sample)
                                        return {dsample,dsample,im}
                                     end})
