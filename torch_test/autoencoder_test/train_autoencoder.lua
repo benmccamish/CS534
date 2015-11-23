@@ -72,8 +72,8 @@ end
 --dataset = getdata(filename, params.inputsize)
 
 
-dataset = getfootballdata('/scratch/tfiez/torch_test/CS534/torch_test/autoencoder_test/video_frames/', 1, 110)
-
+--dataset = getfootballdata('/scratch/tfiez/torch_test/CS534/torch_test/autoencoder_test/video_frames/', 1, 110)
+dataset = getfootballdata('/Users/benmccamish/video_frames/', 1, 110)
 print("Got data!")
 --dissplayData(dataset, 1, 1, 2)
 if params.display then
@@ -380,7 +380,8 @@ for t = 1,params.maxiter,params.batchsize do
       --]]
       -- live display
       
-      my_output = '/scratch/tfiez/torch_test/CS534/torch_test/autoencoder_test/auto_output/'
+      --my_output = '/scratch/tfiez/torch_test/CS534/torch_test/autoencoder_test/auto_output/'
+      my_output = '/Users/benmccamish/auto_output/'
       os.execute('mkdir -p ' .. my_output)
       print(dataset:size())
       for i = 1,dataset:size() do
