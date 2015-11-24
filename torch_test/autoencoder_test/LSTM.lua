@@ -117,7 +117,7 @@ lm:insert(lookup, 1)
 
 -- output layer
 lm:add(nn.Sequencer(nn.Linear(inputSize, ds:featureSize())))
-lm:add(nn.Sequencer(nn.LogSoftMax()))
+--lm:add(nn.Sequencer(nn.LogSoftMax()))
 
 if opt.uniform > 0 then
    for k,param in ipairs(lm:parameters()) do
@@ -134,11 +134,7 @@ lm:remember(opt.lstm and 'both' or 'eval')
 opt.decayFactor = (opt.minLR - opt.learningRate)/opt.saturateEpoch
 
 train = dp.Optimizer{
-   loss = nn.ModuleCriterion(
-            nn.SequencerCriterion(nn.ClassNLLCriterion()), 
-            nn.Identity(), 
-            opt.cuda and nn.Sequencer(nn.Convert()) or nn.Identity()
-         ),
+   loss = nn.MSECriterion(),
    epoch_callback = function(model, report) -- called every epoch
       if report.epoch > 0 then
          opt.learningRate = opt.learningRate + opt.decayFactor
