@@ -49,6 +49,7 @@ if not opt.silent then
    table.print(opt)
 end
 
+torch.setdefaulttensortype('torch.FloatTensor')
 --[[Data]]--
 ds = footballplaydata('/scratch/tfiez/torch_test/CS534/torch_test/autoencoder_test/', 0.1)
 --ds:validSet():contextSize(opt.batchSize)
@@ -148,7 +149,10 @@ lm:remember(opt.lstm and 'both' or 'eval')
 opt.decayFactor = (opt.minLR - opt.learningRate)/opt.saturateEpoch
 
 train = dp.Optimizer{
-   loss = nn.MSECriterion(),
+   loss = nn.ModuleCriterion(nn.SequencerCriterion(nn.MSECriterion()),
+   	nn.Identity(), 
+            opt.cuda and nn.Sequencer(nn.Convert()) or nn.Identity()
+         ),
    epoch_callback = function(model, report) -- called every epoch
       if report.epoch > 0 then
          opt.learningRate = opt.learningRate + opt.decayFactor
