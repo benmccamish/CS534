@@ -25,7 +25,7 @@ function footballplaydata(dataPath, validRatio)
       local imgray = image.rgb2y(img)      
       imgray = image.scale(imgray, reducedImageWidth, reducedImageHeight)
 
-      local target_img = image.load(targetVid:filename(1))
+      local target_img = image.load(video1:filename(i))
       local target_imgray = image.rgb2y(target_img)      
       target_imgray = image.scale(imgray, reducedImageWidth, reducedImageHeight)
 
