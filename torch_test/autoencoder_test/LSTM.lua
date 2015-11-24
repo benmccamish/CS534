@@ -33,7 +33,7 @@ cmd:option('--uniform', 0.1, 'initialize parameters using uniform distribution b
 -- recurrent layer 
 cmd:option('--lstm', true, 'use Long Short Term Memory (nn.LSTM instead of nn.Recurrent)')
 cmd:option('--rho', 5, 'back-propagate through time (BPTT) for rho time-steps')
-cmd:option('--hiddenSize', '{200}', 'number of hidden units used at output of each recurrent layer. When more than one is specified, RNN/LSTMs are stacked')
+cmd:option('--hiddenSize', '{1000}', 'number of hidden units used at output of each recurrent layer. When more than one is specified, RNN/LSTMs are stacked')
 cmd:option('--zeroFirst', false, 'first step will forward zero through recurrence (i.e. add bias of recurrence). As opposed to learning bias specifically for first step.')
 cmd:option('--dropout', false, 'apply dropout after each recurrent layer')
 cmd:option('--dropoutProb', 0.5, 'probability of zeroing a neuron (dropout probability)')
@@ -50,7 +50,7 @@ if not opt.silent then
 end
 
 --[[Data]]--
-ds = footballplaydata('/Users/benmccamish/LSTMVideos/Training/', 0.9)
+ds = footballplaydata('/scratch/tfiez/torch_test/CS534/torch_test/autoencoder_test/', 0.1)
 --ds:validSet():contextSize(opt.batchSize)
 --ds:testSet():contextSize(opt.batchSize)
 print("Got data!")
@@ -67,7 +67,17 @@ print("Got data!")
 -- language model
 lm = nn.Sequential()
 
-local inputSize = opt.hiddenSize[1]
+local my_size = ds:iSize()
+
+local inputSize = 1
+for i = 1,#my_size do
+	inputSize = inputSize * my_size[i]
+end
+
+print(inputSize)
+
+--hiddenSize = {1000}
+
 for i,hiddenSize in ipairs(opt.hiddenSize) do 
 
    if i~= 1 and not opt.lstm then
@@ -104,8 +114,10 @@ for i,hiddenSize in ipairs(opt.hiddenSize) do
    inputSize = hiddenSize
 end
 
+
 -- input layer (i.e. word embedding space)
-lm:insert(nn.SplitTable(1,2), 1) -- tensor to table of tensors
+lm:insert(nn.SplitTable(1), 1) -- tensor to table of tensors
+lm:insert(nn.Convert(ds:ioShapes(), 'bf'), 1)
 
 if opt.dropout then
    lm:insert(nn.Dropout(opt.dropoutProb), 1)
@@ -113,10 +125,12 @@ end
 
 lookup = nn.LookupTable(ds:featureSize(), opt.hiddenSize[1])
 lookup.maxOutNorm = -1 -- disable maxParamNorm on the lookup table
-lm:insert(lookup, 1)
+--lm:insert(lookup, 1)
 
 -- output layer
-lm:add(nn.Sequencer(nn.Linear(inputSize, ds:featureSize())))
+print(inputSize)
+lm:add(nn.Sequencer(nn.Linear(inputSize, 8160)))
+lm:add(nn.Sequencer(nn.Sigmoid()))
 --lm:add(nn.Sequencer(nn.LogSoftMax()))
 
 if opt.uniform > 0 then
@@ -157,13 +171,13 @@ train = dp.Optimizer{
       model:maxParamNorm(opt.maxOutNorm) -- affects params
       model:zeroGradParameters() -- affects gradParams 
    end,
-   feedback = dp.Perplexity(),  
+   --feedback = dp.Perplexity(),  
    sampler = dp.ShuffleSampler{epoch_size = opt.trainEpochSize, batch_size = opt.batchSize}, 
    progress = opt.progress
 }
 
 valid = dp.Evaluator{
-   feedback = dp.Perplexity(),  
+   --feedback = dp.Perplexity(),  
    sampler = dp.Sampler{epoch_size = opt.validEpochSize, batch_size = 1},
    progress = opt.progress
 }
@@ -184,7 +198,7 @@ xp = dp.Experiment{
       dp.FileLogger(),
       dp.EarlyStopper{
          max_epochs = opt.maxTries, 
-         error_report={'validator','feedback','perplexity','ppl'}
+         error_report={'validator'}
       }
    },
    random_seed = os.time(),
@@ -208,3 +222,26 @@ if not opt.silent then
 end
 
 xp:run(ds)
+
+--local t_set = ds:get('train')
+--[[
+print(t_set:size())
+
+dummy_table = nn.Sequential()
+
+dummy_table:add(nn.Convert(ds:ioShapes(), 'bf'))
+
+dummy_table:add(nn.SplitTable(1))
+inputSize = 8160
+rnn = nn.Sequencer(nn.FastLSTM(inputSize, 800))
+dummy_table:add(rnn)
+dummy_table:add(nn.Sequencer(nn.Linear(800, 8160)))
+dummy_table:add(nn.Sequencer(nn.Sigmoid()))
+
+stuff = dummy_table:forward(t_set)
+--for i,k in ipairs(dummy_table.output) do print(i, k) end
+--print(dummy_table.output:size())
+print(#dummy_table.output)
+print(dummy_table.output[1]:size())
+--]]
+--lm:forward(t_set)

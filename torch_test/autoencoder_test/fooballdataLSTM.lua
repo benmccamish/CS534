@@ -10,16 +10,18 @@ function footballplaydata(dataPath, validRatio)
 
 
    -- 1. load images into input and target Tensors
-   local video1 = paths.indexdir(paths.concat(dataPath, 'videos')) -- 1
+
+   local video1 = paths.indexdir(paths.concat(dataPath, 'video_frames')) -- 1
    print('Got Images')
-   local targetVid = paths.indexdir(paths.concat(dataPath, 'target')) 
+   local targetVid = paths.indexdir(paths.concat(dataPath, 'video_frames')) 
    print('Got Target')
-   local size = video1:size() + targetVid:size()
+   --local size = video1:size() + targetVid:size()
+   local size = 10
    local shuffle = torch.randperm(size) -- shuffle the data
    local input = torch.FloatTensor(size, 1, reducedImageWidth, reducedImageHeight)
    local target = torch.FloatTensor(size, 1, reducedImageWidth, reducedImageHeight)
 
-   for i=1,video1:size() do
+   for i=1,10 do
       print('Iteration: '..i)
       local img = image.load(video1:filename(i))
       local imgray = image.rgb2y(img)      
@@ -29,7 +31,7 @@ function footballplaydata(dataPath, validRatio)
       local target_imgray = image.rgb2y(target_img)      
       target_imgray = image.scale(imgray, reducedImageWidth, reducedImageHeight)
 
-      print(imgray:size())
+      print(imgray[1]:size())
       local idx = shuffle[i]
       input[idx]:copy(imgray)
       target[idx]:copy(target_imgray)
@@ -41,11 +43,22 @@ function footballplaydata(dataPath, validRatio)
    local nValid = math.floor(size*validRatio)
    local nTrain = size - nValid
 
+input:narrow(1, 1, nTrain)
+print(input:size())
+
+print(input:narrow(1, 1, nTrain):size())
+   
    local trainInput = dp.ImageView('bchw', input:narrow(1, 1, nTrain))
    local trainTarget = dp.ImageView('bchw', target:narrow(1, 1, nTrain))
    local validInput = dp.ImageView('bchw', input:narrow(1, nTrain+1, nValid))
    local validTarget = dp.ImageView('bchw', target:narrow(1, nTrain+1, nValid))
 
+--[[
+   local trainInput = dp.SequenceView('bwc', input:narrow(1, 1, nTrain))
+   local trainTarget = dp.SequenceView('bwc', target:narrow(1, 1, nTrain))
+   local validInput = dp.SequenceView('bwc', input:narrow(1, nTrain+1, nValid))
+   local validTarget = dp.SequenceView('bwc', target:narrow(1, nTrain+1, nValid))
+]]--   
    -- 3. wrap views into datasets
 
    local train = dp.DataSet{inputs=trainInput,targets=trainTarget,which_set='train'}
