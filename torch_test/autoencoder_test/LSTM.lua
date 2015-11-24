@@ -51,7 +51,11 @@ end
 
 torch.setdefaulttensortype('torch.FloatTensor')
 --[[Data]]--
-ds = footballplaydata('/scratch/tfiez/torch_test/CS534/torch_test/autoencoder_test/', 0.1)
+--ds = footballplaydata('/scratch/tfiez/torch_test/CS534/torch_test/autoencoder_test/', 0.1)
+ds = footballplaydata('/Users/benmccamish/LSTMVideos/Training/', 0.1)
+
+
+
 --ds:validSet():contextSize(opt.batchSize)
 --ds:testSet():contextSize(opt.batchSize)
 print("Got data!")
