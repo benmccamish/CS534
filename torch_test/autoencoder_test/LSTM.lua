@@ -23,7 +23,7 @@ cmd:option('--maxOutNorm', -1, 'max l2-norm of each layer\'s output neuron weigh
 cmd:option('--cutoffNorm', -1, 'max l2-norm of concatenation of all gradParam tensors')
 cmd:option('--batchSize', 100, 'number of examples per batch')
 cmd:option('--cuda', false, 'use CUDA')
-cmd:option('--useDevice', 1, 'sets the device (GPU) to use')
+cmd:option('--useDevice', 2, 'sets the device (GPU) to use')
 cmd:option('--maxEpoch', 1000, 'maximum number of epochs to run')
 cmd:option('--maxTries', 50, 'maximum number of epochs to try to find a better local minima for early-stopping')
 cmd:option('--progress', false, 'print progress bar')
@@ -51,8 +51,8 @@ end
 
 torch.setdefaulttensortype('torch.FloatTensor')
 --[[Data]]--
---ds = footballplaydata('/scratch/tfiez/torch_test/CS534/torch_test/autoencoder_test/', 0.1)
-ds = footballplaydata('/Users/benmccamish/LSTMVideos/Training/', 0.1)
+ds = footballplaydata('/scratch/tfiez/torch_test/CS534/torch_test/autoencoder_test/', 0.1)
+--ds = footballplaydata('/Users/benmccamish/LSTMVideos/Training/', 0.1)
 
 
 
@@ -135,7 +135,7 @@ lookup.maxOutNorm = -1 -- disable maxParamNorm on the lookup table
 -- output layer
 print(inputSize)
 lm:add(nn.Sequencer(nn.Linear(inputSize, 8160)))
-lm:add(nn.Sequencer(nn.Sigmoid()))
+--lm:add(nn.Sequencer(nn.Sigmoid()))
 --lm:add(nn.Sequencer(nn.LogSoftMax()))
 
 if opt.uniform > 0 then
@@ -154,7 +154,7 @@ opt.decayFactor = (opt.minLR - opt.learningRate)/opt.saturateEpoch
 
 train = dp.Optimizer{
    loss = nn.ModuleCriterion(nn.SequencerCriterion(nn.MSECriterion()),
-   	nn.Identity(), 
+   	nil, 
             opt.cuda and nn.Sequencer(nn.Convert()) or nn.Identity()
          ),
    epoch_callback = function(model, report) -- called every epoch
@@ -191,7 +191,7 @@ valid = dp.Evaluator{
 }
 
 tester = dp.Evaluator{
-   feedback = dp.Perplexity(),  
+   --feedback = dp.Perplexity(),  
    sampler = dp.Sampler{batch_size = 1} 
 }
 
@@ -200,18 +200,18 @@ tester = dp.Evaluator{
 xp = dp.Experiment{
    model = lm,
    optimizer = train,
-   validator = valid,
+   --[[validator = valid,
    tester = tester,
    observer = {
-      dp.FileLogger(),
+      --dp.FileLogger(),
       dp.EarlyStopper{
          max_epochs = opt.maxTries, 
          error_report={'validator'}
       }
-   },
+   },--]]
    random_seed = os.time(),
    max_epoch = opt.maxEpoch,
-   target_module = nn.SplitTable(1,1):type('torch.IntTensor')
+   --target_module = nn.SplitTable(1,1):type('torch.IntTensor')
 }
 
 --[[GPU or CPU]]--
@@ -223,7 +223,7 @@ if opt.cuda then
    xp:cuda()
 end
 
-xp:verbose(not opt.silent)
+xp:verbose(true)
 if not opt.silent then
    print"Language Model :"
    print(lm)
