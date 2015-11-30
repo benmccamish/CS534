@@ -16,22 +16,38 @@ function footballplaydata(dataPath, validRatio)
    local targetVid = paths.indexdir(paths.concat(dataPath, 'video_frames')) 
    print('Got Target')
    --local size = video1:size() + targetVid:size()
-   local size = 10
+   local size = 100
    local shuffle = torch.randperm(size) -- shuffle the data
-   local input = torch.FloatTensor(size, 1, reducedImageWidth, reducedImageHeight)
-   local target = torch.FloatTensor(size, 1, reducedImageWidth, reducedImageHeight)
+   local input = torch.FloatTensor(size, 1, reducedImageHeight, reducedImageWidth)
+   local target = torch.FloatTensor(size, 1, reducedImageHeight, reducedImageWidth)
+   
+   local my_index = 1
+   
+   local video_filenames = {}
+   local target_filenames = {}
+   
+   for i = 1,10 do
+   	for j = 1,10 do
+   		table.insert(video_filenames, dataPath .. 'video_frames/' .. i .. '_' .. j .. '.png')
+   		table.insert(target_filenames, dataPath .. 'video_frames/' .. i .. '_' .. j + 1 .. '.png')
+   	end
+   end
+   		
 
-   for i=1,10 do
+   for i=1,size do
       print('Iteration: '..i)
-      local img = image.load(video1:filename(i))
+      print(video_filenames[i])
+      print(target_filenames[i])
+      local img = image.load(video_filenames[i])
+      --local img = image.load(video1:filename(i))
       local imgray = image.rgb2y(img)      
       imgray = image.scale(imgray, reducedImageWidth, reducedImageHeight)
 
-      local target_img = image.load(video1:filename(i))
+      local target_img = image.load(target_filenames[i])
       local target_imgray = image.rgb2y(target_img)      
       target_imgray = image.scale(imgray, reducedImageWidth, reducedImageHeight)
 
-      print(imgray[1]:size())
+      --print(imgray[1]:size())
       local idx = shuffle[i]
       input[idx]:copy(imgray)
       target[idx]:copy(target_imgray)

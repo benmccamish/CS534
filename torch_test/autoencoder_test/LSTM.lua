@@ -24,7 +24,7 @@ cmd:option('--cutoffNorm', -1, 'max l2-norm of concatenation of all gradParam te
 cmd:option('--batchSize', 100, 'number of examples per batch')
 cmd:option('--cuda', false, 'use CUDA')
 cmd:option('--useDevice', 2, 'sets the device (GPU) to use')
-cmd:option('--maxEpoch', 1000, 'maximum number of epochs to run')
+cmd:option('--maxEpoch', 300, 'maximum number of epochs to run')
 cmd:option('--maxTries', 50, 'maximum number of epochs to try to find a better local minima for early-stopping')
 cmd:option('--progress', false, 'print progress bar')
 cmd:option('--silent', false, 'don\'t print anything to stdout')
@@ -83,17 +83,19 @@ print(inputSize)
 
 --hiddenSize = {1000}
 
-for i,hiddenSize in ipairs(opt.hiddenSize) do 
+my_hidden = {2000, 2000, 2000}
+
+for i = 1,#my_hidden do 
 
    if i~= 1 and not opt.lstm then
-      lm:add(nn.Sequencer(nn.Linear(inputSize, hiddenSize)))
+      lm:add(nn.Sequencer(nn.Linear(inputSize, my_hidden[i])))
    end
    
    -- recurrent layer
    local rnn
    if opt.lstm then
       -- Long Short Term Memory
-      rnn = nn.Sequencer(nn.FastLSTM(inputSize, hiddenSize))
+      rnn = nn.Sequencer(nn.FastLSTM(inputSize, my_hidden[i]))
    else
       -- simple recurrent neural network
       rnn = nn.Recurrent(
@@ -111,12 +113,12 @@ for i,hiddenSize in ipairs(opt.hiddenSize) do
    end
 
    lm:add(rnn)
-   
+   --[[
    if opt.dropout then -- dropout it applied between recurrent layers
       lm:add(nn.Sequencer(nn.Dropout(opt.dropoutProb)))
    end
-   
-   inputSize = hiddenSize
+   --]]
+   inputSize = my_hidden[i]
 end
 
 
@@ -124,10 +126,11 @@ end
 lm:insert(nn.SplitTable(1), 1) -- tensor to table of tensors
 lm:insert(nn.Convert(ds:ioShapes(), 'bf'), 1)
 
+--[[
 if opt.dropout then
    lm:insert(nn.Dropout(opt.dropoutProb), 1)
 end
-
+--]]
 lookup = nn.LookupTable(ds:featureSize(), opt.hiddenSize[1])
 lookup.maxOutNorm = -1 -- disable maxParamNorm on the lookup table
 --lm:insert(lookup, 1)
@@ -180,7 +183,7 @@ train = dp.Optimizer{
       model:zeroGradParameters() -- affects gradParams 
    end,
    --feedback = dp.Perplexity(),  
-   sampler = dp.ShuffleSampler{epoch_size = opt.trainEpochSize, batch_size = opt.batchSize}, 
+   sampler = dp.Sampler{epoch_size = opt.trainEpochSize, batch_size = 100}, 
    progress = opt.progress
 }
 
@@ -231,8 +234,53 @@ end
 
 xp:run(ds)
 
---local t_set = ds:get('train')
+
+function reset_range(x, d, h, w)
+	for i = 1,d do
+		for j = 1,h do
+			for k = 1,w do
+				if (x[i][j][k] < 0) then
+					x[i][j][k] = 0
+				end
+				
+				if (x[i][j][k] > 1) then
+					x[i][j][k] = 1
+				end
+			end
+		end
+	end
+end
+
+
+
+
+local inputs = ds:get('train', 'input')
+local targets = ds:get('train', 'target')
+
+
+for i = 1,9 do
+	cur_input = inputs:narrow(1, (i * 10) + 1, 10)
+	lm:updateOutput(cur_input)
+	for j = 1,10 do
+		local new_out = torch.reshape(lm.output[j], 1, 68, 120)
+		image.save('train_output/' .. i .. '_' .. j .. 'out.png', new_out)
+		image.save('train_output/' .. i .. '_' .. j .. 'target.png', cur_input[j])
+	end
+end
 --[[
+print(inputs:size())
+lm:updateOutput(inputs)
+print(#lm.output)
+print(lm.output[1]:size())
+
+local new_output = torch.reshape(lm.output[1], 1, 68, 120)
+print(new_output:size())
+
+image.save("test_image.png", new_output)
+--]]
+--print(t_set:size())
+--[[
+
 print(t_set:size())
 
 dummy_table = nn.Sequential()
@@ -241,6 +289,7 @@ dummy_table:add(nn.Convert(ds:ioShapes(), 'bf'))
 
 dummy_table:add(nn.SplitTable(1))
 inputSize = 8160
+
 rnn = nn.Sequencer(nn.FastLSTM(inputSize, 800))
 dummy_table:add(rnn)
 dummy_table:add(nn.Sequencer(nn.Linear(800, 8160)))
