@@ -73,14 +73,13 @@ def Kmeans(k, Data_matrix, Labels_vector):
 
 	if Labels_1.count(9) > Labels_1.count(7):
 		print 'First cluster is nine with %d out of %d correct' %(Labels_1.count(9), len(Labels_1))
-		print Labels_1.count(7)
-		print 'Second cluster is seven with %d out of %d correct' %(Labels_2.count(7), len(Labels_2))
-		print Labels_1.count(9)
+
+		print 'Second cluster is seven with %d out of %d correct' %(Labels_2.count(7), len(Labels_2)
 	else:
 		print 'First cluster is seven with %d out of %d correct' %(Labels_1.count(7), len(Labels_1))
-		print Labels_1.count(9)
+	
 		print 'Second cluster is nine with %d out of %d correct' %(Labels_2.count(9), len(Labels_2))		
-		print Labels_1.count(7)
+	
 	
 
 def main():
