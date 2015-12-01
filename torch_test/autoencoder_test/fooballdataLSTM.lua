@@ -28,8 +28,8 @@ function footballplaydata(dataPath, validRatio)
    
    for i = 1,10 do
    	for j = 1,10 do
-   		table.insert(video_filenames, dataPath .. 'video_frames/' .. i .. '_' .. j .. '.png')
-   		table.insert(target_filenames, dataPath .. 'video_frames/' .. i .. '_' .. j + 1 .. '.png')
+   		table.insert(video_filenames, dataPath .. 'video_frames/' .. 0 .. '_' .. j .. '.png')
+   		table.insert(target_filenames, dataPath .. 'video_frames/' .. 0 .. '_' .. j + 1 .. '.png')
    	end
    end
    		

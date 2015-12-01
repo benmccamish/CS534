@@ -15,7 +15,7 @@ cmd:text('Train a Language Model on PennTreeBank dataset using RNN or LSTM')
 cmd:text('Example:')
 cmd:text("recurrent-language-model.lua --cuda --useDevice 2 --progress --zeroFirst --cutoffNorm 4 --rho 10")
 cmd:text('Options:')
-cmd:option('--learningRate', 0.05, 'learning rate at t=0')
+cmd:option('--learningRate', 0.5, 'learning rate at t=0')
 cmd:option('--minLR', 0.00001, 'minimum learning rate')
 cmd:option('--saturateEpoch', 400, 'epoch at which linear decayed LR will reach minLR')
 cmd:option('--momentum', 0.9, 'momentum')
@@ -24,7 +24,7 @@ cmd:option('--cutoffNorm', -1, 'max l2-norm of concatenation of all gradParam te
 cmd:option('--batchSize', 100, 'number of examples per batch')
 cmd:option('--cuda', false, 'use CUDA')
 cmd:option('--useDevice', 2, 'sets the device (GPU) to use')
-cmd:option('--maxEpoch', 300, 'maximum number of epochs to run')
+cmd:option('--maxEpoch', 5, 'maximum number of epochs to run')
 cmd:option('--maxTries', 50, 'maximum number of epochs to try to find a better local minima for early-stopping')
 cmd:option('--progress', false, 'print progress bar')
 cmd:option('--silent', false, 'don\'t print anything to stdout')
@@ -51,8 +51,8 @@ end
 
 torch.setdefaulttensortype('torch.FloatTensor')
 --[[Data]]--
-ds = footballplaydata('/scratch/tfiez/torch_test/CS534/torch_test/autoencoder_test/', 0.1)
---ds = footballplaydata('/Users/benmccamish/LSTMVideos/Training/', 0.1)
+--ds = footballplaydata('/scratch/tfiez/torch_test/CS534/torch_test/autoencoder_test/', 0.1)
+ds = footballplaydata('/Users/benmccamish/LSTMVideos/Training/', 0.1)
 
 
 
@@ -259,7 +259,7 @@ local targets = ds:get('train', 'target')
 
 
 for i = 1,9 do
-	cur_input = inputs:narrow(1, (i * 10) + 1, 10)
+	cur_input = inputs:narrow(1, (0 * 10) + 1, 10)
 	lm:updateOutput(cur_input)
 	for j = 1,10 do
 		local new_out = torch.reshape(lm.output[j], 1, 68, 120)
