@@ -70,13 +70,11 @@ def EigValVectSorted(eigValues, eigVectors):
 	return eigValVect
 
 def TopKEiganVectMatrix(k, eigValVect):
-	eigVectReduction
+	eigVectReduction = (eigValVect[0][1])[None].T
 	for i in xrange(1,k):
-		print i
+		eigVectReduction = np.hstack((eigVectReduction, (eigValVect[i][1])[None].T))
 
-
-
-	#return eigValVect[:k]
+	return eigVectReduction
 
 #Gets the Covarance or Scatter matrix of the data, both produce equiv i matrix
 def CovarianceMatrix(data):
@@ -185,7 +183,14 @@ def Problem3(reducedToDim, k, data, labels):
 	print "Sorting..."
 	eigValVect = EigValVectSorted(eigValues, eigVectors)
 	print 'Done'
-	TopKEiganVectMatrix(reducedToDim, eigValVect)
+	print "Getting top %d eigen vectors" % (reducedToDim)
+	reduction = TopKEiganVectMatrix(reducedToDim, eigValVect)
+	print "Reducing data..."
+	reducedData = data.dot(reduction)
+	print "Data Reduced"
+	print "Calculating KMeans with reduced data"
+	Kmeans(k, reducedData, labels)
+	print "Problem 3 Done\n\n"
 
 def main():
 	dataFile = 'Data.csv'
@@ -198,7 +203,7 @@ def main():
 	
 	#Problem2(data, labels, 0.9)
 
-	Problem3(10, k, data, labels)
+	Problem3(3, k, data, labels)
 
 
 if __name__ == "__main__":
