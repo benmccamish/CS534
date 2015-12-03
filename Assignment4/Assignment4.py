@@ -5,19 +5,70 @@ import random
 import copy as cp
 import numpy as np
 from matplotlib import pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from mpl_toolkits.mplot3d import proj3d
+from matplotlib.backends.backend_pdf import PdfPages
 
 
 
-def TopKEig(k, eigValues, eigVectors):
+def plotBarGraph(cumLineData, eigValues, percentage, relevantEigVals):
+
+	threshold = percentage
+	values = np.array(eigValues[:relevantEigVals])
+	# split it up
+	above_threshold = np.maximum(values - threshold, 0)
+	below_threshold = np.minimum(values, threshold)
+
+	x = range(len(values))
+
+	# and plot it
+	fig, ax = plt.subplots()
+	ax.bar(x, below_threshold, 0.35, color="g")
+	ax.bar(x, above_threshold, 0.35, color="r",bottom=below_threshold)
+
+	ax.plot([0., relevantEigVals], [threshold, threshold], "k--")
+
+	fig.savefig("BarGraph.pdf")
+
+
+def plotLineGraph(cumLineData, eigValues, percentage):
+	plt.axhline(y=percentage, xmin=0, xmax=1, hold=None)
+	plt.plot(cumLineData, color='r',)
+	plt.ylabel('Cumulative Distribution')
+	plt.xlabel('Principle Component')
+	pp = PdfPages('CDF_Varience.pdf')
+	plt.savefig(pp, format='pdf')
+	pp.close()
+
+
+def CalculatePercentageEigen(percentage, eigValVect):
+	eigValues = [float(i[0]) for i in eigValVect]
+	totalEigValues = sum(eigValues)
+	varience = []
+	for val in eigValues:
+		varience.append(float(val)/totalEigValues)
+
+	cumVarience = np.cumsum(varience)
+	plotLineGraph(cumVarience, eigValues, percentage)
+	#plotBarGraph(cumVarience, eigValues, percentage)
+
+	relevantEigVals = 0
+
+	for i in range(len(cumVarience)):
+		if(cumVarience[i] >= percentage):
+			relevantEigVals = i
+			break
+
+	plotBarGraph(cumVarience, eigValues, percentage, relevantEigVals)
+	
+	return eigValVect[:relevantEigVals]
+
+def EigValVectSorted(eigValues, eigVectors):
 	eigValVect = []
 	for i in range(len(eigValues)):
 		eigValVect.append((abs(eigValues[i]), eigVectors[:,i]))
 
 	eigValVect.sort()
 	eigValVect.reverse()
-	return eigValVect[:k]
+	return eigValVect
 
 
 #Gets the Covarance or Scatter matrix of the data, both produce equiv i matrix
@@ -109,8 +160,10 @@ def main():
 	covMatrix = CovarianceMatrix(data)
 	eigValues, eigVectors = np.linalg.eig(covMatrix)
 	#print eigVectors
-	topKEigPairs = TopKEig(10, eigValues, eigVectors)
-	print len(topKEigPairs)
+	eigValVect = EigValVectSorted(eigValues, eigVectors)
+	#print [float(i[0]) for i in eigValVect]
+	eigValVect = CalculatePercentageEigen(0.90, eigValVect)
+	print len(eigValVect)
 	#Kmeans(k, Data_matrix, Labels_vector)
 	
 if __name__ == "__main__":
