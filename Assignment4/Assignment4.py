@@ -10,7 +10,6 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 
 def plotBarGraph(cumLineData, eigValues, percentage, relevantEigVals):
-
 	threshold = percentage
 	values = np.array(eigValues[:relevantEigVals])
 	# split it up
@@ -70,6 +69,14 @@ def EigValVectSorted(eigValues, eigVectors):
 	eigValVect.reverse()
 	return eigValVect
 
+def TopKEiganVectMatrix(k, eigValVect):
+	eigVectReduction
+	for i in xrange(1,k):
+		print i
+
+
+
+	#return eigValVect[:k]
 
 #Gets the Covarance or Scatter matrix of the data, both produce equiv i matrix
 def CovarianceMatrix(data):
@@ -79,7 +86,6 @@ def CovarianceMatrix(data):
 	for i in range(data.shape[0]):
 		covMatrix += (data[i] - avg)*((data[i] - avg)[None].T)
 
-	print covMatrix.shape
 	covMatrix = covMatrix/(float(1)/data.shape[0])
 	return covMatrix
 
@@ -149,7 +155,37 @@ def Kmeans(k, Data_matrix, Labels_vector):
 		print 'First cluster is seven with %d out of %d correct' %(Labels_1.count(7), len(Labels_1))
 		print 'Second cluster is nine with %d out of %d correct' %(Labels_2.count(9), len(Labels_2))		
 	
-	
+
+def Problem1(k, data, labels):
+	Kmeans(k, data, labels)
+
+def Problem2(data, labels, percentage):
+	print "\n\nStarting Problem 2"
+	print "Getting Covariance Matrix..."
+	covMatrix = CovarianceMatrix(data)
+	print "Covariance Matrix Done"
+	print "Getting Eigen Values and Vectors..."
+	eigValues, eigVectors = np.linalg.eig(covMatrix)
+	print "Eigen Values and Vectors Done"
+	print "Sorting..."
+	eigValVect = EigValVectSorted(eigValues, eigVectors)
+	print 'Done'
+	print "Graphing and selecting eigen values that have cummulative varience greater than %f" % (percentage)
+	eigValVect = CalculatePercentageEigen(percentage, eigValVect)
+	print "Problem 2 Done\n\n"
+
+def Problem3(reducedToDim, k, data, labels):
+	print "\n\nStarting Problem 3"
+	print "Getting Covariance Matrix..."
+	covMatrix = CovarianceMatrix(data)
+	print "Covariance Matrix Done"
+	print "Getting Eigen Values and Vectors..."
+	eigValues, eigVectors = np.linalg.eig(covMatrix)
+	print "Eigen Values and Vectors Done"
+	print "Sorting..."
+	eigValVect = EigValVectSorted(eigValues, eigVectors)
+	print 'Done'
+	TopKEiganVectMatrix(reducedToDim, eigValVect)
 
 def main():
 	dataFile = 'Data.csv'
@@ -157,14 +193,13 @@ def main():
 	k = 2
 	
 	data, labels = Import_Data(dataFile, labelsFile)
-	covMatrix = CovarianceMatrix(data)
-	eigValues, eigVectors = np.linalg.eig(covMatrix)
-	#print eigVectors
-	eigValVect = EigValVectSorted(eigValues, eigVectors)
-	#print [float(i[0]) for i in eigValVect]
-	eigValVect = CalculatePercentageEigen(0.90, eigValVect)
-	print len(eigValVect)
-	#Kmeans(k, Data_matrix, Labels_vector)
 	
+	#Problem1(k, data, labels)
+	
+	#Problem2(data, labels, 0.9)
+
+	Problem3(10, k, data, labels)
+
+
 if __name__ == "__main__":
 	main()
