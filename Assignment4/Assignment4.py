@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
 
-
+#Graphs the Eigen Values
 def plotBarGraph(cumLineData, eigValues, percentage, relevantEigVals):
 	threshold = percentage
 	values = np.array(eigValues[:relevantEigVals])
@@ -27,7 +27,7 @@ def plotBarGraph(cumLineData, eigValues, percentage, relevantEigVals):
 
 	fig.savefig("BarGraph.pdf")
 
-
+#Graphs the cummulative varience of eigen values
 def plotLineGraph(cumLineData, eigValues, percentage):
 	plt.axhline(y=percentage, xmin=0, xmax=1, hold=None)
 	plt.plot(cumLineData, color='r',)
@@ -37,7 +37,7 @@ def plotLineGraph(cumLineData, eigValues, percentage):
 	plt.savefig(pp, format='pdf')
 	pp.close()
 
-
+#Gets the top eigen value and vector pairs that have a cummulative variance above that which is specified.
 def CalculatePercentageEigen(percentage, eigValVect):
 	eigValues = [float(i[0]) for i in eigValVect]
 	totalEigValues = sum(eigValues)
@@ -47,7 +47,6 @@ def CalculatePercentageEigen(percentage, eigValVect):
 
 	cumVarience = np.cumsum(varience)
 	plotLineGraph(cumVarience, eigValues, percentage)
-	#plotBarGraph(cumVarience, eigValues, percentage)
 
 	relevantEigVals = 0
 
