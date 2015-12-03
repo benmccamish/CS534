@@ -10,6 +10,16 @@ from mpl_toolkits.mplot3d import proj3d
 
 
 
+def TopKEig(k, eigValues, eigVectors):
+	eigValVect = []
+	for i in range(len(eigValues)):
+		eigValVect.append((abs(eigValues[i]), eigVectors[:,i]))
+
+	eigValVect.sort()
+	eigValVect.reverse()
+	return eigValVect[:k]
+
+
 #Gets the Covarance or Scatter matrix of the data, both produce equiv i matrix
 def CovarianceMatrix(data):
 	#Get the average x
@@ -96,7 +106,11 @@ def main():
 	k = 2
 	
 	data, labels = Import_Data(dataFile, labelsFile)
-	S = CovarianceMatrix(data)
+	covMatrix = CovarianceMatrix(data)
+	eigValues, eigVectors = np.linalg.eig(covMatrix)
+	#print eigVectors
+	topKEigPairs = TopKEig(10, eigValues, eigVectors)
+	print len(topKEigPairs)
 	#Kmeans(k, Data_matrix, Labels_vector)
 	
 if __name__ == "__main__":
