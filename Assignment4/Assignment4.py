@@ -59,6 +59,7 @@ def CalculatePercentageEigen(percentage, eigValVect):
 	
 	return eigValVect[:relevantEigVals]
 
+#Sorts eigen values with their vectors in decreasing order
 def EigValVectSorted(eigValues, eigVectors):
 	eigValVect = []
 	for i in range(len(eigValues)):
@@ -68,6 +69,7 @@ def EigValVectSorted(eigValues, eigVectors):
 	eigValVect.reverse()
 	return eigValVect
 
+#Gets the top K eigen vectors and puts them into a 256 x K matrix used to reduced the dimensions of the
 def TopKEiganVectMatrix(k, eigValVect):
 	eigVectReduction = (eigValVect[0][1])[None].T
 	for i in xrange(1,k):
