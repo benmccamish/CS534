@@ -4,16 +4,29 @@ import math
 import random
 import copy as cp
 import numpy as np
+from matplotlib import pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d import proj3d
 
 
+
+#Gets the Covarance or Scatter matrix of the data, both produce equiv i matrix
+def CovarianceMatrix(data):
+	#Get the average x
+	avg = np.mean(data, axis=0)
+	covMatrix = 0
+	for i in range(data.shape[0]):
+		covMatrix += (data[i] - avg)*((data[i] - avg)[None].T)
+
+	print covMatrix.shape
+	covMatrix = covMatrix/(float(1)/data.shape[0])
+	return covMatrix
 
 def Import_Data(Data, Labels):
 	Data_matrix = np.genfromtxt(Data,delimiter=',')
 	Labels_vector = np.genfromtxt(Labels,delimiter=',')
 	
 	return Data_matrix, Labels_vector
-	
-
 
 def Cluster_Centroid(Cluster):
 	Centroid = [0]*len(Cluster[0])
@@ -24,9 +37,6 @@ def Cluster_Centroid(Cluster):
 		Centroid[x] = float(sum(Cluster_componenets[x]))/len(Cluster_componenets[x])
 
 	return Centroid
-	
-	
-	
 	
 def Kmeans_Helper(Centroid_1, Centroid_2, Data_matrix, Labels_1, Labels_2, Labels_vector):
 	Cluster_1 = []
@@ -73,22 +83,21 @@ def Kmeans(k, Data_matrix, Labels_vector):
 
 	if Labels_1.count(9) > Labels_1.count(7):
 		print 'First cluster is nine with %d out of %d correct' %(Labels_1.count(9), len(Labels_1))
-
-		print 'Second cluster is seven with %d out of %d correct' %(Labels_2.count(7), len(Labels_2)
+		print 'Second cluster is seven with %d out of %d correct' %(Labels_2.count(7), len(Labels_2))
 	else:
 		print 'First cluster is seven with %d out of %d correct' %(Labels_1.count(7), len(Labels_1))
-	
 		print 'Second cluster is nine with %d out of %d correct' %(Labels_2.count(9), len(Labels_2))		
 	
 	
 
 def main():
-	Data = 'Data.csv'
-	Labels = 'Labels.csv'
+	dataFile = 'Data.csv'
+	labelsFile = 'Labels.csv'
 	k = 2
 	
-	Data_matrix, Labels_vector = Import_Data(Data, Labels)
-	Kmeans(k, Data_matrix, Labels_vector)
+	data, labels = Import_Data(dataFile, labelsFile)
+	S = CovarianceMatrix(data)
+	#Kmeans(k, Data_matrix, Labels_vector)
 	
 if __name__ == "__main__":
 	main()
