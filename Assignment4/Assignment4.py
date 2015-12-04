@@ -7,7 +7,6 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
-
 #Graphs the Eigen Values
 def plotBarGraph(cumLineData, eigValues, percentage, relevantEigVals):
 	threshold = percentage
@@ -104,7 +103,7 @@ def Cluster_Centroid(Cluster):
 
 	return Centroid
 	
-def Kmeans_Helper(Centroid_1, Centroid_2, Data_matrix, Labels_1, Labels_2, Labels_vector):
+def Kmeans_Helper(Centroid_1, Centroid_2, Data_matrix, Labels_vector):
 	Cluster_1 = []
 	Cluster_2 = []
 	Labels_1 = []
@@ -132,6 +131,7 @@ def Kmeans(k, Data_matrix, Labels_vector):
 	Labels_1 = []
 	Labels_2 = []
 	Initial_points = random.sample(Data_matrix, 2)
+	print Initial_points[0]
 	
 	Cluster_1.append(Initial_points[0])
 	Cluster_2.append(Initial_points[1])
@@ -140,12 +140,13 @@ def Kmeans(k, Data_matrix, Labels_vector):
 	Centroid_1 = Cluster_Centroid(Cluster_1)
 
 	while Temp != len(Cluster_1):
+		print len(Cluster_1)
 	
 		Centroid_1 = Cluster_Centroid(Cluster_1)
 		Centroid_2 = Cluster_Centroid(Cluster_2)
 		Temp = len(Cluster_1)
 		
-		Cluster_1, Cluster_2, Labels_1, Labels_2 = Kmeans_Helper(Centroid_1, Centroid_2, Data_matrix, Labels_1, Labels_2, Labels_vector)
+		Cluster_1, Cluster_2, Labels_1, Labels_2 = Kmeans_Helper(Centroid_1, Centroid_2, Data_matrix, Labels_vector)
 
 	if Labels_1.count(9) > Labels_1.count(7):
 		print 'First cluster is nine with %d out of %d correct' %(Labels_1.count(9), len(Labels_1))
