@@ -93,6 +93,7 @@ def Import_Data(Data, Labels):
 	
 	return Data_matrix, Labels_vector
 
+#Calculates and returns the centroid of the given cluster
 def Cluster_Centroid(Cluster):
 	Centroid = [0]*len(Cluster[0])
 	
@@ -102,63 +103,114 @@ def Cluster_Centroid(Cluster):
 		Centroid[x] = float(sum(Cluster_componenets[x]))/len(Cluster_componenets[x])
 
 	return Centroid
-	
-def Kmeans_Helper(Centroid_1, Centroid_2, Data_matrix, Labels_vector):
-	Cluster_1 = []
-	Cluster_2 = []
-	Labels_1 = []
-	Labels_2 = []
-	for x in range(0, len(Data_matrix)):
-		SSE1 = 0
-		SSE2 = 0
-		for y in range(0, len(Data_matrix[0])):
-			SSE1 += (Data_matrix[x][y] - Centroid_1[y])**2
-			SSE2 += (Data_matrix[x][y] - Centroid_2[y])**2
-		if SSE1 > SSE2:
-			Cluster_2.append(Data_matrix[x])
-			Labels_2.append(Labels_vector[x])
+
+
+#Takes in data and places each data point in the cluster that yields the lowest SSE.  Example labels are kept track of in each cluster by being placed in the respective label1 or label2 lists 	
+def reCluster(centroid1, centroid2, data, labels):
+	cluster1 = []
+	cluster2 = []
+	labels1 = []
+	labels2 = []
+	totalError = 0
+	for x in range(0, len(data)):
+		sse1 = 0
+		sse2 = 0
+		for y in range(0, len(data[0])):
+			sse1 += (data[x][y] - centroid1[y])**2
+			sse2 += (data[x][y] - centroid2[y])**2
+		if sse1 > sse2:
+			cluster2.append(data[x])
+			labels2.append(labels[x])
+			totalError += sse2
 		else:
-			Cluster_1.append(Data_matrix[x])
-			Labels_1.append(Labels_vector[x])
+			cluster1.append(data[x])
+			labels1.append(labels[x])
+			totalError += sse1
+		
+	return cluster1, cluster2, labels1, labels2, totalError
 			
-	return Cluster_1, Cluster_2, Labels_1, Labels_2
-			
 	
+#Two clusters are randomly initialized, each with a single data point.  Clusters change based on minimizing SSE and updating cluster centroids. 
+#The two optimal clusters are returned along with corresponding labels, total error from points to their cluster, and the purity of each cluster. 
+#NOTE: This function only runs kmeans once.  kmeansTenTimes is created to call kmeans ten times.
+def kmeans(k, data, labels):
+	cluster1 = []
+	cluster2 = []
+	labels1 = []
+	labels2 = []
+	sevenPurity = 0
+	ninePurity = 0
+	Initial_points = random.sample(data, 2)
+	#print Initial_points[0]
 	
-def Kmeans(k, Data_matrix, Labels_vector):
-	Cluster_1 = []
-	Cluster_2 = []
-	Labels_1 = []
-	Labels_2 = []
-	Initial_points = random.sample(Data_matrix, 2)
-	print Initial_points[0]
-	
-	Cluster_1.append(Initial_points[0])
-	Cluster_2.append(Initial_points[1])
+	cluster1.append(Initial_points[0])
+	cluster2.append(Initial_points[1])
 	Temp = 0
 	
-	Centroid_1 = Cluster_Centroid(Cluster_1)
+	centroid1 = Cluster_Centroid(cluster1)
 
-	while Temp != len(Cluster_1):
-		print len(Cluster_1)
+	while Temp != len(cluster1):
+		#print len(cluster1)
 	
-		Centroid_1 = Cluster_Centroid(Cluster_1)
-		Centroid_2 = Cluster_Centroid(Cluster_2)
-		Temp = len(Cluster_1)
+		centroid1 = Cluster_Centroid(cluster1)
+		centroid2 = Cluster_Centroid(cluster2)
+		Temp = len(cluster1)
 		
-		Cluster_1, Cluster_2, Labels_1, Labels_2 = Kmeans_Helper(Centroid_1, Centroid_2, Data_matrix, Labels_vector)
-
-	if Labels_1.count(9) > Labels_1.count(7):
-		print 'First cluster is nine with %d out of %d correct' %(Labels_1.count(9), len(Labels_1))
-		print 'Second cluster is seven with %d out of %d correct' %(Labels_2.count(7), len(Labels_2))
-	else:
-		print 'First cluster is seven with %d out of %d correct' %(Labels_1.count(7), len(Labels_1))
-		print 'Second cluster is nine with %d out of %d correct' %(Labels_2.count(9), len(Labels_2))		
+		cluster1, cluster2, labels1, labels2, totalError = reCluster(centroid1, centroid2, data, labels)
+		#print totalError
+		
 	
+	if labels1.count(9) > labels1.count(7):
+		ninePurity = labels1.count(9)/len(labels1)
+		sevenPurity = labels2.count(7)/len(labels2)
+		#print 'The accuracy for class 9 was %f and the accuracy for class 7 was %f' %(ninePurity, sevenPurity) 
+		#print 'First cluster is nine with %d out of %d correct' %(labels1.count(9), len(labels1))
+		#print 'Second cluster is seven with %d out of %d correct' %(labels2.count(7), len(labels2))
+	else:
+		sevenPurity = labels1.count(7)/len(labels1)
+		ninePurity = labels2.count(9)/len(labels2)		
+		#print 'The accuracy for class 9 was %f and the accuracy for class 7 was %f' %(ninePurity, sevenPurity)
+		#print 'First cluster is seven with %d out of %d correct' %(labels1.count(7), len(labels1))
+	
+	
+	
+	
+	return cluster1, cluster2, labels1, labels2, totalError, ninePurity, sevenPurity
 
+#Function that just calls kmeans 10 times.  It finds the best two clusters, 	
+def kmeansTenTimes(k, data, labels):
+	lowestTotalError = float("inf")
+	sevenPurity = 0
+	ninePurity = 0
+	for x in range(0, 10):
+		cluster1, cluster2, labels1, labels2, totalError, unused1, unused2 = kmeans(k, data, labels)
+		print 'Kmeans run resulted in a total SSE (incluses SSE of all points) of %f' %totalError
+		if totalError < lowestTotalError:
+			bestCluster1 = cluster1
+			bestCluster2 = cluster2
+			bestCluster1Labels = labels1
+			bestCluster2Labels = labels2
+			lowestTotalError = totalError
+
+	
+	if bestCluster1Labels.count(9) > bestCluster1Labels.count(7):
+		ninePurity = bestCluster1Labels.count(9)/len(bestCluster1Labels)
+		sevenPurity = bestCluster2Labels.count(7)/len(bestCluster2Labels)
+
+	else:
+		sevenPurity = bestCluster1Labels.count(7)/len(bestCluster1Labels)
+		ninePurity = bestCluster2Labels.count(9)/len(bestCluster2Labels)
+		
+
+
+	return bestCluster1, bestCluster2, bestCluster1Labels, bestCluster2Labels, lowestTotalError, ninePurity, sevenPurity
+	
+	
 def Problem1(k, data, labels):
-	Kmeans(k, data, labels)
-
+	#cluster1, cluster2, labels1, labels2, totalError, ninePurity, sevenPurity = kmeans(k, data, labels)
+	bestCluster1, bestCluster2, bestCluster1Labels, bestCluster2Labels, lowestTotalError, ninePurity, sevenPurity = kmeansTenTimes(k, data, labels)
+	print 'The accuracy for class 9 was %f and the accuracy for class 7 was %f' %(ninePurity, sevenPurity)
+	print 'lowest total error found was %f' %lowestTotalError		
 def Problem2(data, labels, percentage):
 	print "\n\nStarting Problem 2"
 	print "Getting Covariance Matrix..."
@@ -191,7 +243,7 @@ def Problem3(reducedToDim, k, data, labels):
 	reducedData = data.dot(reduction)
 	print "Data Reduced"
 	print "Calculating KMeans with reduced data"
-	Kmeans(k, reducedData, labels)
+	Problem1(k, reducedData, labels)
 	print "Problem 3 Done\n\n"
 
 def main():
