@@ -303,9 +303,9 @@ def main():
 	
 	#Problem2(data, labels, 0.9)
 
-	#Problem3(3, k, data, labels)
+	Problem3(42, k, data, labels)
 
-	Problem4(data, labels)
+	#Problem4(data, labels)
 
 
 if __name__ == "__main__":
