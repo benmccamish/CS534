@@ -246,6 +246,52 @@ def Problem3(reducedToDim, k, data, labels):
 	Problem1(k, reducedData, labels)
 	print "Problem 3 Done\n\n"
 
+def Problem4(data, labels):
+
+	class_7 = []
+	class_9 = []
+
+	for i in range(len(labels)):
+		if (labels[i] == 7):
+			class_7.append(data[i])
+		else:
+			class_9.append(data[i])
+
+	mean_7 = np.mean(class_7, axis=0)
+	mean_9 = np.mean(class_9, axis=0)
+	print(mean_7)
+
+	S = np.matrix(np.zeros((256, 256)))
+
+	#print(class_7[0].shape)
+	for i in range(len(class_7)):
+		my_mat = np.matrix((class_7[i] - mean_7))
+		S = S + (my_mat.T * my_mat)
+
+	for i in range(len(class_9)):
+		my_mat = np.matrix((class_9[i] - mean_9))
+		S = S + (my_mat.T * my_mat)
+
+	print( (np.multiply((class_9[i] - mean_9), np.transpose((class_9[i] - mean_9)))).size)
+	w =  (mean_7 - mean_9) * np.linalg.inv(S)
+	
+	print(w)
+	print(w.size)
+	print(type(w))
+
+	projected_data = []
+
+	for i in range(len(labels)):
+		projected_pt = np.matrix(data[i]) * w.T
+		print(projected_pt)
+		
+		projected_data.append(projected_pt)
+
+	cluster1, cluster2, labels1, labels2, totalError, ninePurity, sevenPurity = kmeans(2, projected_data, labels)
+
+	print(ninePurity)
+	print(sevenPurity)	
+
 def main():
 	dataFile = 'Data.csv'
 	labelsFile = 'Labels.csv'
@@ -257,7 +303,9 @@ def main():
 	
 	#Problem2(data, labels, 0.9)
 
-	Problem3(3, k, data, labels)
+	#Problem3(3, k, data, labels)
+
+	Problem4(data, labels)
 
 
 if __name__ == "__main__":
