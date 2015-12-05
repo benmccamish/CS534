@@ -211,6 +211,7 @@ def Problem1(k, data, labels):
 	bestCluster1, bestCluster2, bestCluster1Labels, bestCluster2Labels, lowestTotalError, ninePurity, sevenPurity = kmeansTenTimes(k, data, labels)
 	print 'The accuracy for class 9 was %f and the accuracy for class 7 was %f' %(ninePurity, sevenPurity)
 	print 'lowest total error found was %f' %lowestTotalError		
+
 def Problem2(data, labels, percentage):
 	print "\n\nStarting Problem 2"
 	print "Getting Covariance Matrix..."
