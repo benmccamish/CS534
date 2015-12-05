@@ -249,6 +249,7 @@ def Problem3(reducedToDim, k, data, labels):
 
 def Problem4(data, labels):
 
+	#seperating classes	
 	class_7 = []
 	class_9 = []
 
@@ -257,11 +258,12 @@ def Problem4(data, labels):
 			class_7.append(data[i])
 		else:
 			class_9.append(data[i])
-
+	#calculating mean
 	mean_7 = np.mean(class_7, axis=0)
 	mean_9 = np.mean(class_9, axis=0)
 	print(mean_7)
 
+	#Calculating S
 	S = np.matrix(np.zeros((256, 256)))
 
 	#print(class_7[0].shape)
@@ -274,12 +276,14 @@ def Problem4(data, labels):
 		S = S + (my_mat.T * my_mat)
 
 	print( (np.multiply((class_9[i] - mean_9), np.transpose((class_9[i] - mean_9)))).size)
+	#calculating projection vector	
 	w =  (mean_7 - mean_9) * np.linalg.inv(S)
 	
 	print(w)
 	print(w.size)
 	print(type(w))
 
+	#projecting data
 	projected_data = []
 
 	for i in range(len(labels)):
@@ -288,6 +292,7 @@ def Problem4(data, labels):
 		
 		projected_data.append(projected_pt)
 
+	#running k means
 	cluster1, cluster2, labels1, labels2, totalError, ninePurity, sevenPurity = kmeans(2, projected_data, labels)
 
 	print(ninePurity)
